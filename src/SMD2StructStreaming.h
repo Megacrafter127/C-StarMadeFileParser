@@ -2,7 +2,7 @@
  * SMD2StructStreaming.hpp
  *
  *  Created on: 12.02.2016
- *      Author: til
+ *      Author: Megacrafter127
  */
 
 #ifndef SMD2STRUCTSTREAMING_HPP_
