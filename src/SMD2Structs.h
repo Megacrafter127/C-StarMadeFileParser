@@ -9,6 +9,7 @@
 #define SMD2STRUCTS_HPP_
 
 #include <stdint.h>
+#include <string.h>
 
 namespace smd2{
 	union blockV0 {
@@ -57,6 +58,9 @@ namespace smd2{
 	};
 	
 	typedef union blockV0 segmentBlockDataV0[16][16][16];
+	
+	void inflate(segmentBlockDataV0*,char*,size_t);
+	bool deflate(char*,size_t,segmentBlockDataV0*);
 	
 	struct segmentHeader{
 		segmentHeader();

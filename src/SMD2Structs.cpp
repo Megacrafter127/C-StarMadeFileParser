@@ -7,6 +7,8 @@
 
 #include "SMD2Structs.h"
 #include <string.h>
+#include <stdlib.h>
+#include <zlib.h>
 
 namespace smd2{
 	blockV0::blockV0(union blockV0n arg) {
@@ -73,6 +75,22 @@ namespace smd2{
 			this->timestamps[i][j][k]=0;
 		}
 	};
+	
+	void inflate(segmentBlockDataV0* dst,char* src,size_t srcLen) {
+		size_t l=sizeof(segmentBlockDataV0);
+		uncompress((Bytef*)dst,&l,(Bytef*)src,srcLen);
+	}
+	
+	bool deflate(char* dst,size_t dstLen,segmentBlockDataV0* src) {
+		size_t l=compressBound(sizeof(segmentBlockDataV0));
+		char* c=(char*)malloc(l);
+		compress((Bytef*)c,&l,(Bytef*)src,sizeof(segmentBlockDataV0));
+		if(l<=dstLen) {
+			memcpy(dst,c,l);
+			return true;
+		}
+		return false;
+	}
 }
 
 
