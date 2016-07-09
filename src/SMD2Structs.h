@@ -1,107 +1,107 @@
 /*
- * SMD2Structs.hpp
+ * SMD2Structs.h
  *
  *  Created on: 02.02.2016
  *      Author: Megacrafter127
  */
 
-#ifndef SMD2STRUCTS_HPP_
-#define SMD2STRUCTS_HPP_
+#ifndef SMD2STRUCTS_H_
+#define SMD2STRUCTS_H_
 
-#include <stdint.h>
 #include <string.h>
 
 namespace smd2{
-	union blockV0 {
-		union blockV0n {
-			struct lgc {
-				int id : 11;
-				int hp : 9;
-				bool active : 1;
-				int orientation : 3;
-			} logic;
-			struct nrm {
-				int id : 11;
-				int hp : 9;
-				int orientation : 4;
-			} normal;
-			struct fRot {
-				int id : 11;
-				int hp : 8;
-				int orientation : 5;
-			} fullRotation; //for things like rails, corners and similar blocks
-			uint8_t raw[3];
-		} bigEndian; //sizeof(union blockV0) == 3
-		blockV0(union blockV0n);
-
-		union blockV0f{
-			struct lgc {
-				int orientation : 3;
-				bool active : 1;
-				int hp : 9;
-				int id : 11;
-			} logic;
-			struct nrm {
-				int orientation : 4;
-				int hp : 9;
-				int id : 11;
-			} normal;
-			struct fRot {
-				int orientation : 5;
-				int hp : 8;
-				int id : 11;
-			} fullRotation; //for things like rails, corners and similar blocks
-			uint8_t raw[3];
-		} littleEndian;
-		blockV0(union blockV0f);
-
+	typedef char rawBlock[3];
+	struct block {
+		unsigned int id:11;
+		unsigned int hp:8;
+		bool active;
+		unsigned int orientation:5;
+		block(const struct block*);
+		block(const unsigned int, const unsigned int, const bool, const unsigned int);
+		block(const rawBlock*);
+		block();
+		rawBlock *toRaw(rawBlock*);
 	};
-	
-	typedef union blockV0 segmentBlockDataV0[16][16][16];
-	
-	void inflate(segmentBlockDataV0*,char*,size_t);
-	bool deflate(char*,size_t,segmentBlockDataV0*);
-	
-	struct segmentHeader{
-		segmentHeader();
-		segmentHeader(uint64_t&, int32_t&, int32_t&, int32_t&, int8_t, int32_t&);
-		int64_t timestamp; //when the segment was last edited or created
-		int32_t x,y,z; //offset of this segment
-		int8_t type; //unknown
-		int32_t inlen; //length of the deflated data without padding.
+	typedef rawBlock rawChunkData[16][16][16];
+	typedef struct block chunkData[16][16][16];
+	typedef char compressedChunkData[5094], rawCompressedSegment[5120];
+	rawChunkData *inflate(rawChunkData*,const compressedChunkData*);
+	compressedChunkData *deflate(compressedChunkData*,const rawChunkData*);
+	bool isEmpty(const rawCompressedSegment*);
+	struct segmentHead {
+		unsigned char unknownChar;
+		unsigned long long timestamp;
+		signed long x,y,z;
+		unsigned char type;
+		unsigned long inlen;
+		segmentHead(const struct segmentHead*);
+		segmentHead(const unsigned char, const unsigned long long, const signed long, const signed long, const signed long, const unsigned char, const unsigned long);
+		segmentHead(const rawCompressedSegment*,const bool);
+		segmentHead();
+		rawCompressedSegment *toRaw(rawCompressedSegment*,const bool);
 	};
-
-	struct segmentV0 {
-		segmentV0();
-		segmentV0(struct segmentHeader&,char*);
-		struct segmentHeader head;
-#define SEGMENT0MAXINL 5103
-		char deflated[5103]; //deflated segmentBlockData. 0-padded.
-		operator struct segmentV1();
+	struct segment {
+		struct segmentHead head;
+		chunkData blocks;
+		segment(const struct segment*);
+		segment(const struct segmentHead*,const chunkData*);
+		segment(const struct segmentHead*,const rawChunkData*);
+		segment(const struct segmentHead*,const compressedChunkData*);
+		segment(const struct rawSegment*);
+		segment(const struct compressedSegment*);
+		segment(const rawCompressedSegment*);
+		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
 	};
-
-	struct segmentV1 {
-		segmentV1();
-		segmentV1(uint8_t,struct segmentHeader&,char*);
-		uint8_t unknown;
-		struct segmentHeader head;
-#define SEGMENT1MAXINL 5102
-		char deflated[5102]; //deflated segmentBlockData. 0-padded.
-		operator struct segmentV0();
-	}; //sizeof(struct segmentV0) == sizeof(struct segmentV1)
-
+	struct rawSegment {
+		struct segmentHead head;
+		rawChunkData blocks;
+		rawSegment(const struct rawSegment*);
+		rawSegment(const struct segmentHead*,const rawChunkData*);
+		rawSegment(const struct segmentHead*,const chunkData*);
+		rawSegment(const struct segmentHead*,const compressedChunkData*);
+		rawSegment(const struct segment*);
+		rawSegment(const struct compressedSegment*);
+		rawSegment(const rawCompressedSegment*);
+		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
+	};
+	struct compressedSegment {
+		struct segmentHead head;
+		compressedChunkData blocks;
+		compressedSegment(const struct compressedSegment*);
+		compressedSegment(const struct segmentHead*,const compressedChunkData*);
+		compressedSegment(const struct segmentHead*,const chunkData*);
+		compressedSegment(const struct segmentHead*,const rawChunkData*);
+		compressedSegment(const struct segment*);
+		compressedSegment(const struct rawSegment*);
+		compressedSegment(const rawCompressedSegment*);
+		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
+	};
+	typedef char rawSmd2Head[65540], rawSmd2Index[8];
+	typedef rawCompressedSegment smd2Body[4096];
+	struct smd2Index {
+				signed long id;
+				unsigned long inlen;
+				smd2Index(const struct smd2Index*);
+				smd2Index(const signed long, const unsigned long);
+				smd2Index();
+				smd2Index(const rawSmd2Index*);
+				rawSmd2Index *toRaw(rawSmd2Index*);
+				bool isValid();
+	};
+	typedef struct smd2Index fullSmd2Index[16][16][16];
+	typedef unsigned long long fullSmd2TimestampHead[16][16][16];
 	struct smd2Head {
-		int32_t unknownInt; //unknown effects, likely version number of the format. If it is 0, only segmentV0s will occur.
-		struct segmentIndex {
-			int32_t segmentID; //the index of the segment
-			int32_t segmentLen; //same as the inlen field in segmentHeader, except it includes the length of the header
-			segmentIndex();
-			segmentIndex(int32_t,int32_t);
-		} indizes[16][16][16];
-		int64_t timestamps[16][16][16]; //same as the timestamp field in the corrosponding segment.
-		smd2Head(int32_t,struct segmentIndex[16][16][16],int64_t[16][16][16]);
-		smd2Head();
+		unsigned long version;
+		fullSmd2Index index;
+		fullSmd2TimestampHead timestamps;
+		smd2Head(const struct smd2Head*);
+		smd2Head(const unsigned long, const fullSmd2Index*, const fullSmd2TimestampHead*);
+		smd2Head(const rawSmd2Head*);
+		rawSmd2Head *toRaw(rawSmd2Head*);
 	};
+	unsigned int getSegmentSlotCountFromSMD2Size(const size_t);
+	size_t getSMD2SizeFromSegmentSlotCount(const unsigned int);
 	
 } // end smd2
-#endif /* SMD2STRUCTS_HPP_ */
+#endif /* SMD2STRUCTS_H_ */

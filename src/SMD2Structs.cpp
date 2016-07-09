@@ -8,17 +8,31 @@
 #include "SMD2Structs.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <arpa/inet.h>
 #include <zlib.h>
 
 namespace smd2{
-	blockV0::blockV0(union blockV0n arg) {
-		this->bigEndian=arg;
+	block::block(const struct block *copy) {}; //TODO
+	block::block(const unsigned int id, const unsigned int hp, const bool active, const unsigned int orientation) {}; //TODO
+	block::block(const rawBlock *raw) {}; //TODO
+	block::block() {
+		this->id=0;
+		this->hp=0;
+		this->active=false;
+		this->orientation=0;
 	};
-	blockV0::blockV0(union blockV0f arg) {
-		this->littleEndian=arg;
+	rawBlock *block::toRaw(rawBlock *target) {}; //TODO
+	
+	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {}; //TODO
+	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {}; //TODO
+	bool isEmpty(const rawCompressedSegment *segment) {}; //TODO
+	
+	segmentHead::segmentHead(const struct segmentHead *copy) {
+		memcpy(this,copy,sizeof(struct segmentHead));
 	};
-
-	segmentHeader::segmentHeader(uint64_t& timestamp, int32_t& x, int32_t& y, int32_t& z, int8_t type, int32_t& inlen) {
+	segmentHead::segmentHead(const unsigned char unknownChar, const unsigned long long timestamp, const signed long x, const signed long y, const signed long z, const unsigned char type, const unsigned long inlen) {
+		this->unknownChar=unknownChar;
 		this->timestamp=timestamp;
 		this->x=x;
 		this->y=y;
@@ -26,7 +40,9 @@ namespace smd2{
 		this->type=type;
 		this->inlen=inlen;
 	};
-	segmentHeader::segmentHeader() {
+	segmentHead::segmentHead(const rawCompressedSegment *raw,const bool offset) {}; //TODO
+	segmentHead::segmentHead() {
+		this->unknownChar=0;
 		this->timestamp=0;
 		this->x=0;
 		this->y=0;
@@ -34,63 +50,76 @@ namespace smd2{
 		this->type=0;
 		this->inlen=0;
 	};
-	segmentV0::operator segmentV1() {
-		return segmentV1(0,this->head,(char*)&this->deflated);
+	rawCompressedSegment *segmentHead::toRaw(rawCompressedSegment*,const bool offset) {}; //TODO
+
+	segment::segment(const struct segment *copy) {}; //TODO
+	segment::segment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO
+	segment::segment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO
+	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO
+	segment::segment(const struct rawSegment *src) {}; //TODO
+	segment::segment(const struct compressedSegment *src) {}; //TODO
+	segment::segment(const rawCompressedSegment *src) {}; //TODO
+	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO
+			
+	rawSegment::rawSegment(const struct rawSegment *copy) {}; //TODO
+	rawSegment::rawSegment(const struct segmentHead *head,const rawChunkData*) {}; //TODO
+	rawSegment::rawSegment(const struct segmentHead *head,const chunkData*) {}; //TODO
+	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData*) {}; //TODO
+	rawSegment::rawSegment(const struct segment *src) {}; //TODO
+	rawSegment::rawSegment(const struct compressedSegment *src) {}; //TODO
+	rawSegment::rawSegment(const rawCompressedSegment *src) {}; //TODO
+	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO
+					
+	compressedSegment::compressedSegment(const struct compressedSegment *copy) {}; //TODO
+	compressedSegment::compressedSegment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO
+	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO
+	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO
+	compressedSegment::compressedSegment(const struct segment *src) {}; //TODO
+	compressedSegment::compressedSegment(const struct rawSegment *src) {}; //TODO
+	compressedSegment::compressedSegment(const rawCompressedSegment *src) {}; //TODO
+	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO
+	
+	
+	smd2Index::smd2Index(const struct smd2Index *copy) {
+		this->id=copy->id;
+		this->inlen=copy->inlen;
 	};
-	segmentV1::operator segmentV0() {
-		return segmentV0(this->head,(char*)&this->deflated);
+	smd2Index::smd2Index(const signed long id, const unsigned long len) {
+		this->id=id;
+		this->inlen=len;
 	};
-	segmentV0::segmentV0(struct segmentHeader& head,char* deflated) {
-		this->head=head;
-		for(size_t i=0;i<5103;i++) {
-			this->deflated[i]=deflated[i];
-		}
+	smd2Index::smd2Index() {
+		this->id=-1;
+		this->inlen=0;
 	};
-	segmentV1::segmentV1(uint8_t unknown,struct segmentHeader& head,char* deflated) {
-		this->unknown=unknown;
-		this->head=head;
-		for(size_t i=0;i<5102;i++) {
-			this->deflated[i]=deflated[i];
-		}
+	smd2Index::smd2Index(const rawSmd2Index *raw) {
+		uint32_t split[2];
+		memcpy(split,raw,sizeof(rawSmd2Index));
+		this->id=ntohl(split[0]);
+		this->inlen=ntohl(split[1]);
 	};
-	smd2Head::segmentIndex::segmentIndex(int32_t id,int32_t len) {
-		this->segmentID=id;
-		this->segmentLen=len;
+	rawSmd2Index *smd2Index::toRaw(rawSmd2Index *trg) {
+		uint32_t split[2];
+		split[0]=htonl(this->id);
+		split[1]=htonl(this->inlen);
+		memcpy(trg,split,sizeof(rawSmd2Index));
+		return trg;
 	};
-	smd2Head::segmentIndex::segmentIndex() {
-		this->segmentID=-1;
-		this->segmentLen=0;
-	};
-	smd2Head::smd2Head(int32_t unknown,struct smd2Head::segmentIndex indizes[16][16][16],int64_t timestamps[16][16][16]) {
-		this->unknownInt=unknown;
-		for(int i=0;i<16;i++) for(int j=0;j<16;j++) for(int k=0;k<16;k++) {
-			this->indizes[i][j][k]=indizes[i][j][k];
-			this->timestamps[i][j][k]=timestamps[i][j][k];
-		}
-	};
-	smd2Head::smd2Head() {
-		this->unknownInt=0;
-		for(int i=0;i<16;i++) for(int j=0;j<16;j++) for(int k=0;k<16;k++) {
-			this->indizes[i][j][k]=smd2Head::segmentIndex();
-			this->timestamps[i][j][k]=0;
-		}
+	bool smd2Index::isValid() {
+		return this->id!=-1;
 	};
 	
-	void inflate(segmentBlockDataV0* dst,char* src,size_t srcLen) {
-		size_t l=sizeof(segmentBlockDataV0);
-		uncompress((Bytef*)dst,&l,(Bytef*)src,srcLen);
-	}
+	smd2Head::smd2Head(const struct smd2Head*) {}; //TODO
+	smd2Head::smd2Head(const unsigned long version, const fullSmd2Index *index,const fullSmd2TimestampHead *timestamps) {
+		this->version=version;
+		memcpy(&(this->index),index,sizeof(fullSmd2Index));
+		memcpy(&(this->timestamps),timestamps,sizeof(fullSmd2TimestampHead));
+	};
+	smd2Head::smd2Head(const rawSmd2Head*) {}; //TODO
+	rawSmd2Head *smd2Head::toRaw(rawSmd2Head*) {}; //TODO
 	
-	bool deflate(char* dst,size_t dstLen,segmentBlockDataV0* src) {
-		size_t l=compressBound(sizeof(segmentBlockDataV0));
-		char* c=(char*)malloc(l);
-		compress((Bytef*)c,&l,(Bytef*)src,sizeof(segmentBlockDataV0));
-		if(l<=dstLen) {
-			memcpy(dst,c,l);
-			return true;
-		}
-		return false;
-	}
+	unsigned int getSegmentSlotCountFromSMD2Size(const size_t) {}; //TODO
+	size_t getSMD2SizeFromSegmentSlotCount(const unsigned int) {}; //TODO
 }
 
 
