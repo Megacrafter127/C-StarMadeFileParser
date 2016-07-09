@@ -268,8 +268,12 @@ namespace smd2{
 	smd2Head::smd2Head(const rawSmd2Head*) {}; //TODO #26
 	rawSmd2Head *smd2Head::toRaw(rawSmd2Head*) {}; //TODO #27
 	
-	unsigned int getSegmentSlotCountFromSMD2Size(const size_t) {}; //TODO #29
-	size_t getSMD2SizeFromSegmentSlotCount(const unsigned int) {}; //TODO #30
+	unsigned int getSegmentSlotCountFromSMD2Size(const size_t size) {
+		return (size-sizeof(rawSmd2Head))/sizeof(rawCompressedSegment);
+	};
+	size_t getSMD2SizeFromSegmentSlotCount(const unsigned int slots) {
+		return sizeof(rawSmd2Head)+(slots*sizeof(rawCompressedSegment));
+	};
 }
 
 
