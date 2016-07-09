@@ -105,7 +105,40 @@ namespace smd2{
 		this->type=type;
 		this->inlen=inlen;
 	};
-	segmentHead::segmentHead(const rawCompressedSegment *raw,const bool offset) {}; //TODO #5
+	segmentHead::segmentHead(const rawCompressedSegment *raw,const bool offset) {
+		size_t i=0;
+		char *chars=(char*)raw;
+		if(offset) {
+			this->unknownChar=chars[i];
+			i++;
+		}
+		uint64_t dbuff64;
+		uint32_t *buff32=(uint32_t*)&dbuff64;
+		memcpy(buff32,&(chars[i]),sizeof(uint64_t));
+		uint32_t dbuff32=ntohl(buff32[0]);
+		buff32[0]=ntohl(buff32[1]);
+		buff32[1]=dbuff32;
+		this->timestamp=dbuff64;
+		i+=sizeof(uint64_t);
+		
+		memcpy(&dbuff32,&(chars[i]),sizeof(int32_t));
+		this->x=ntohl(dbuff32);
+		i+=sizeof(int32_t);
+		
+		memcpy(&dbuff32,&(chars[i]),sizeof(int32_t));
+		this->y=ntohl(dbuff32);
+		i+=sizeof(int32_t);
+		
+		memcpy(&dbuff32,&(chars[i]),sizeof(int32_t));
+		this->z=ntohl(dbuff32);
+		i+=sizeof(int32_t);
+		
+		this->type=chars[i];
+		i++;
+		
+		memcpy(&dbuff32,&(chars[i]),sizeof(uint32_t));
+		this->inlen=ntohl(dbuff32);
+	};
 	segmentHead::segmentHead() {
 		this->unknownChar=0;
 		this->timestamp=0;
