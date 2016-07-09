@@ -85,7 +85,13 @@ namespace smd2{
 	
 	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {}; //TODO #31
 	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {}; //TODO #32
-	bool isEmpty(const rawCompressedSegment *segment) {}; //TODO #28
+	bool isEmpty(const rawCompressedSegment *segment) {
+		size_t *chars=(size_t*)segment;
+		for(size_t i=0;i<(sizeof(rawCompressedSegment)/sizeof(size_t));i++) {
+			if(chars[i]) return false;
+		}
+		return true;
+	};
 	
 	segmentHead::segmentHead(const struct segmentHead *copy) {
 		memcpy(this,copy,sizeof(struct segmentHead));
