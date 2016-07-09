@@ -257,7 +257,9 @@ namespace smd2{
 		return this->id!=-1;
 	};
 	
-	smd2Head::smd2Head(const struct smd2Head*) {}; //TODO #25
+	smd2Head::smd2Head(const struct smd2Head *copy) {
+		memcpy(this,copy,sizeof(struct smd2Head));
+	};
 	smd2Head::smd2Head(const unsigned long version, const fullSmd2Index *index,const fullSmd2TimestampHead *timestamps) {
 		this->version=version;
 		memcpy(&(this->index),index,sizeof(fullSmd2Index));
