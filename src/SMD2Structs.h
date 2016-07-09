@@ -11,17 +11,24 @@
 #include <string.h>
 
 namespace smd2{
+	enum blockType {
+		undefined=0,
+		logic,
+		rotating,
+		fullyRotating
+	};
+	typedef blockType blocktypeList[2048];
 	typedef char rawBlock[3];
 	struct block {
 		unsigned int id:11;
-		unsigned int hp:8;
+		unsigned int hp:9;
 		bool active;
 		unsigned int orientation:5;
 		block(const struct block*);
 		block(const unsigned int, const unsigned int, const bool, const unsigned int);
-		block(const rawBlock*);
+		block(const rawBlock*, const blocktypeList*);
 		block();
-		rawBlock *toRaw(rawBlock*);
+		rawBlock *toRaw(rawBlock*, const blocktypeList*);
 	};
 	typedef rawBlock rawChunkData[16][16][16];
 	typedef struct block chunkData[16][16][16];

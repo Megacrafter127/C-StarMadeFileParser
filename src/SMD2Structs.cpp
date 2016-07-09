@@ -11,18 +11,77 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <zlib.h>
+#include <stdexcept>
 
 namespace smd2{
-	block::block(const struct block *copy) {}; //TODO #1
-	block::block(const unsigned int id, const unsigned int hp, const bool active, const unsigned int orientation) {}; //TODO #2
-	block::block(const rawBlock *raw) {}; //TODO #3
+	block::block(const struct block *copy) {
+		memcpy(this,copy,sizeof(struct block));
+	};
+	block::block(const unsigned int id, const unsigned int hp, const bool active, const unsigned int orientation) {
+		this->id=id;
+		this->hp=hp;
+		this->active=active;
+		this->orientation=orientation;
+	};
+	block::block(const rawBlock *raw, const blocktypeList *list) {
+		if(!list) std::__throw_invalid_argument("the provided list may not be NULL");
+		uint32_t buff=0;
+		memcpy(&buff+sizeof(uint32_t)-sizeof(rawBlock),raw,sizeof(rawBlock));
+		if(buff) {
+			buff=ntohl(buff);
+			this->id=buff;
+			buff>>=11;
+			blockType type=((blockType*)list)[this->id];
+			if(type==undefined) {
+				std::__throw_invalid_argument("blocktype not defined");
+			}
+			this->hp=buff;
+			if(type==fullyRotating) {
+				this->hp&=0x00FF;
+				buff>>=8;
+			} else buff>>=9;
+			if(type==logic) {
+				this->active=buff & 1;
+				buff>>=1;
+			}
+			this->orientation=buff;
+		} else {
+			this->id=0;
+			this->hp=0;
+			this->active=false;
+			this->orientation=0;
+		}
+	};
 	block::block() {
 		this->id=0;
 		this->hp=0;
 		this->active=false;
 		this->orientation=0;
 	};
-	rawBlock *block::toRaw(rawBlock *target) {}; //TODO #4
+	rawBlock *block::toRaw(rawBlock *target, const blocktypeList *list) {
+		if(!list) std::__throw_invalid_argument("the provided list may not be NULL");
+		blockType type=((blockType*)list)[this->id];
+		if(type==undefined) {
+			std::__throw_invalid_argument("blocktype not defined");
+		}
+		uint32_t buff=this->orientation;
+		if(type==logic) {
+			buff<<=1;
+			if(this->active) buff++;
+		}
+		if(type==fullyRotating) {
+			buff<<=8;
+			buff+=(0xFF & this->hp);
+		} else {
+			buff<<=9;
+			buff+=this->hp;
+		}
+		buff<<=11;
+		buff+=id;
+		buff=htonl(buff);
+		memcpy(target,&buff+sizeof(uint32_t)-sizeof(rawBlock),sizeof(rawBlock));
+		return target;
+	};
 	
 	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {}; //TODO #31
 	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {}; //TODO #32
