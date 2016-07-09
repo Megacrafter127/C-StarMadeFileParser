@@ -188,7 +188,10 @@ namespace smd2{
 	segment::segment(const struct segment *copy) {
 		memcpy(this,copy,sizeof(struct segment));
 	};
-	segment::segment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO #8
+	segment::segment(const struct segmentHead *head,const chunkData *blocks) {
+		this->head=*head;
+		memcpy(&(this->blocks),blocks,sizeof(chunkData));
+	};
 	segment::segment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO #9
 	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #10
 	segment::segment(const struct rawSegment *src) {}; //TODO #9
@@ -199,7 +202,10 @@ namespace smd2{
 	rawSegment::rawSegment(const struct rawSegment *copy) {
 		memcpy(this,copy,sizeof(struct rawSegment));
 	};
-	rawSegment::rawSegment(const struct segmentHead *head,const rawChunkData*) {}; //TODO #14
+	rawSegment::rawSegment(const struct segmentHead *head,const rawChunkData *blocks) {
+		this->head=*head;
+		memcpy(&(this->blocks),blocks,sizeof(rawChunkData));
+	};
 	rawSegment::rawSegment(const struct segmentHead *head,const chunkData*) {}; //TODO #15
 	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData*) {}; //TODO #16
 	rawSegment::rawSegment(const struct segment *src) {}; //TODO #15
@@ -210,7 +216,10 @@ namespace smd2{
 	compressedSegment::compressedSegment(const struct compressedSegment *copy) {
 		memcpy(this,copy,sizeof(struct compressedSegment));
 	};
-	compressedSegment::compressedSegment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #20
+	compressedSegment::compressedSegment(const struct segmentHead *head,const compressedChunkData *blocks) {
+		this->head=*head;
+		memcpy(&(this->blocks),blocks,sizeof(compressedChunkData));
+	};
 	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO #21
 	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO #22
 	compressedSegment::compressedSegment(const struct segment *src) {}; //TODO #21
