@@ -185,7 +185,9 @@ namespace smd2{
 		return target;
 	};
 	
-	segment::segment(const struct segment *copy) {}; //TODO #7
+	segment::segment(const struct segment *copy) {
+		memcpy(this,copy,sizeof(struct segment));
+	};
 	segment::segment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO #8
 	segment::segment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO #9
 	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #10
@@ -194,7 +196,9 @@ namespace smd2{
 	segment::segment(const rawCompressedSegment *src) {}; //TODO #11
 	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO #12
 	
-	rawSegment::rawSegment(const struct rawSegment *copy) {}; //TODO #13
+	rawSegment::rawSegment(const struct rawSegment *copy) {
+		memcpy(this,copy,sizeof(struct rawSegment));
+	};
 	rawSegment::rawSegment(const struct segmentHead *head,const rawChunkData*) {}; //TODO #14
 	rawSegment::rawSegment(const struct segmentHead *head,const chunkData*) {}; //TODO #15
 	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData*) {}; //TODO #16
@@ -203,7 +207,9 @@ namespace smd2{
 	rawSegment::rawSegment(const rawCompressedSegment *src) {}; //TODO #17
 	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO #18
 	
-	compressedSegment::compressedSegment(const struct compressedSegment *copy) {}; //TODO #19
+	compressedSegment::compressedSegment(const struct compressedSegment *copy) {
+		memcpy(this,copy,sizeof(struct compressedSegment));
+	};
 	compressedSegment::compressedSegment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #20
 	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO #21
 	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO #22
