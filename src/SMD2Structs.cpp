@@ -13,20 +13,20 @@
 #include <zlib.h>
 
 namespace smd2{
-	block::block(const struct block *copy) {}; //TODO
-	block::block(const unsigned int id, const unsigned int hp, const bool active, const unsigned int orientation) {}; //TODO
-	block::block(const rawBlock *raw) {}; //TODO
+	block::block(const struct block *copy) {}; //TODO #1
+	block::block(const unsigned int id, const unsigned int hp, const bool active, const unsigned int orientation) {}; //TODO #2
+	block::block(const rawBlock *raw) {}; //TODO #3
 	block::block() {
 		this->id=0;
 		this->hp=0;
 		this->active=false;
 		this->orientation=0;
 	};
-	rawBlock *block::toRaw(rawBlock *target) {}; //TODO
+	rawBlock *block::toRaw(rawBlock *target) {}; //TODO #4
 	
-	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {}; //TODO
-	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {}; //TODO
-	bool isEmpty(const rawCompressedSegment *segment) {}; //TODO
+	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {}; //TODO #31
+	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {}; //TODO #32
+	bool isEmpty(const rawCompressedSegment *segment) {}; //TODO #28
 	
 	segmentHead::segmentHead(const struct segmentHead *copy) {
 		memcpy(this,copy,sizeof(struct segmentHead));
@@ -40,7 +40,7 @@ namespace smd2{
 		this->type=type;
 		this->inlen=inlen;
 	};
-	segmentHead::segmentHead(const rawCompressedSegment *raw,const bool offset) {}; //TODO
+	segmentHead::segmentHead(const rawCompressedSegment *raw,const bool offset) {}; //TODO #5
 	segmentHead::segmentHead() {
 		this->unknownChar=0;
 		this->timestamp=0;
@@ -50,34 +50,34 @@ namespace smd2{
 		this->type=0;
 		this->inlen=0;
 	};
-	rawCompressedSegment *segmentHead::toRaw(rawCompressedSegment*,const bool offset) {}; //TODO
+	rawCompressedSegment *segmentHead::toRaw(rawCompressedSegment*,const bool offset) {}; //TODO #6
 
-	segment::segment(const struct segment *copy) {}; //TODO
-	segment::segment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO
-	segment::segment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO
-	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO
-	segment::segment(const struct rawSegment *src) {}; //TODO
-	segment::segment(const struct compressedSegment *src) {}; //TODO
-	segment::segment(const rawCompressedSegment *src) {}; //TODO
-	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO
+	segment::segment(const struct segment *copy) {}; //TODO #7
+	segment::segment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO #8
+	segment::segment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO #9
+	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #10
+	segment::segment(const struct rawSegment *src) {}; //TODO #9
+	segment::segment(const struct compressedSegment *src) {}; //TODO #10
+	segment::segment(const rawCompressedSegment *src) {}; //TODO #11
+	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO #12
 			
-	rawSegment::rawSegment(const struct rawSegment *copy) {}; //TODO
-	rawSegment::rawSegment(const struct segmentHead *head,const rawChunkData*) {}; //TODO
-	rawSegment::rawSegment(const struct segmentHead *head,const chunkData*) {}; //TODO
-	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData*) {}; //TODO
-	rawSegment::rawSegment(const struct segment *src) {}; //TODO
-	rawSegment::rawSegment(const struct compressedSegment *src) {}; //TODO
-	rawSegment::rawSegment(const rawCompressedSegment *src) {}; //TODO
-	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO
+	rawSegment::rawSegment(const struct rawSegment *copy) {}; //TODO #13
+	rawSegment::rawSegment(const struct segmentHead *head,const rawChunkData*) {}; //TODO #14
+	rawSegment::rawSegment(const struct segmentHead *head,const chunkData*) {}; //TODO #15
+	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData*) {}; //TODO #16
+	rawSegment::rawSegment(const struct segment *src) {}; //TODO #15
+	rawSegment::rawSegment(const struct compressedSegment *src) {}; //TODO #16
+	rawSegment::rawSegment(const rawCompressedSegment *src) {}; //TODO #17
+	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO #18
 					
-	compressedSegment::compressedSegment(const struct compressedSegment *copy) {}; //TODO
-	compressedSegment::compressedSegment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO
-	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO
-	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO
-	compressedSegment::compressedSegment(const struct segment *src) {}; //TODO
-	compressedSegment::compressedSegment(const struct rawSegment *src) {}; //TODO
-	compressedSegment::compressedSegment(const rawCompressedSegment *src) {}; //TODO
-	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO
+	compressedSegment::compressedSegment(const struct compressedSegment *copy) {}; //TODO #19
+	compressedSegment::compressedSegment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #20
+	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks) {}; //TODO #21
+	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO #22
+	compressedSegment::compressedSegment(const struct segment *src) {}; //TODO #21
+	compressedSegment::compressedSegment(const struct rawSegment *src) {}; //TODO #22
+	compressedSegment::compressedSegment(const rawCompressedSegment *src) {}; //TODO #23
+	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO #24
 	
 	
 	smd2Index::smd2Index(const struct smd2Index *copy) {
@@ -109,17 +109,17 @@ namespace smd2{
 		return this->id!=-1;
 	};
 	
-	smd2Head::smd2Head(const struct smd2Head*) {}; //TODO
+	smd2Head::smd2Head(const struct smd2Head*) {}; //TODO #25
 	smd2Head::smd2Head(const unsigned long version, const fullSmd2Index *index,const fullSmd2TimestampHead *timestamps) {
 		this->version=version;
 		memcpy(&(this->index),index,sizeof(fullSmd2Index));
 		memcpy(&(this->timestamps),timestamps,sizeof(fullSmd2TimestampHead));
 	};
-	smd2Head::smd2Head(const rawSmd2Head*) {}; //TODO
-	rawSmd2Head *smd2Head::toRaw(rawSmd2Head*) {}; //TODO
+	smd2Head::smd2Head(const rawSmd2Head*) {}; //TODO #26
+	rawSmd2Head *smd2Head::toRaw(rawSmd2Head*) {}; //TODO #27
 	
-	unsigned int getSegmentSlotCountFromSMD2Size(const size_t) {}; //TODO
-	size_t getSMD2SizeFromSegmentSlotCount(const unsigned int) {}; //TODO
+	unsigned int getSegmentSlotCountFromSMD2Size(const size_t) {}; //TODO #29
+	size_t getSMD2SizeFromSegmentSlotCount(const unsigned int) {}; //TODO #30
 }
 
 
