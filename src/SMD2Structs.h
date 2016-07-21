@@ -85,7 +85,6 @@ namespace smd2{
 		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
 	};
 	typedef char rawSmd2Head[65540], rawSmd2Index[8];
-	typedef rawCompressedSegment smd2Body[4096];
 	struct smd2Index {
 				signed long id;
 				unsigned long inlen;
