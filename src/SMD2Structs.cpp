@@ -240,7 +240,8 @@ namespace smd2{
 		inplaceRawChunkToChunk(blocks, src->blocks, list);
 	}
 	
-	segment::segment(const struct compressedSegment *src,const blocktypeList *list):
+	segment::segment(const struct compressedSegment *src,
+					 const blocktypeList *list):
 	head(src->head) {
 		rawChunkData rawBlocks;
 		if(!inflate(&rawBlocks, &src->blocks))
@@ -248,7 +249,25 @@ namespace smd2{
 		inplaceRawChunkToChunk(blocks, rawBlocks, list);
 	}
 	
-	segment::segment(const rawCompressedSegment *src) {} //TODO #11
+	segment::segment(const rawCompressedSegment *src,
+					 const blocktypeList *list):
+	head(src, true) {
+		compressedChunkData blocks;
+		rawChunkData rawBlocks;
+		memcpy(blocks, src + sizeof(rawCompressedSegment)
+						   - sizeof(compressedChunkData),
+			   sizeof(compressedChunkData));
+		if(!inflate(&rawBlocks, &blocks)) {
+			memcpy(blocks, src + sizeof(rawCompressedSegment)
+							   - sizeof(compressedChunkData) - 1,
+				   sizeof(compressedChunkData));
+			if(!inflate(&rawBlocks, &blocks))
+				throw std::runtime_error("decompression failed");
+			head = segmentHead(src, false);
+		}
+		inplaceRawChunkToChunk(this->blocks, rawBlocks, list);
+	}
+	
 	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {} //TODO #12
 	
 	rawSegment::rawSegment(const struct rawSegment *copy) {
@@ -267,6 +286,7 @@ namespace smd2{
 	}
 	
 	rawSegment::rawSegment(const struct segment *src) {} //TODO #15
+	
 	rawSegment::rawSegment(const struct compressedSegment *src):
 	head(src->head) {
 		if(!inflate(&this->blocks, &src->blocks))
