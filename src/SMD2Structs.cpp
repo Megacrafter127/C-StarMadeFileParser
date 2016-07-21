@@ -322,7 +322,14 @@ namespace smd2{
 	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks) {} //TODO #22
 	compressedSegment::compressedSegment(const struct segment *src) {} //TODO #21
 	compressedSegment::compressedSegment(const struct rawSegment *src) {} //TODO #22
-	compressedSegment::compressedSegment(const rawCompressedSegment *src) {} //TODO #23
+	
+	compressedSegment::compressedSegment(const rawCompressedSegment *src):
+	head(src, true) {
+		memcpy(blocks, src + sizeof(rawCompressedSegment)
+			   - sizeof(compressedChunkData),
+			   sizeof(compressedChunkData));
+	}
+	
 	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {} //TODO #24
 	
 	
