@@ -192,9 +192,24 @@ namespace smd2{
 		this->head=*head;
 		memcpy(&(this->blocks),blocks,sizeof(chunkData));
 	};
-	segment::segment(const struct segmentHead *head,const rawChunkData *blocks) {}; //TODO #9
+	
+	segment::segment(const struct segmentHead *head,const rawChunkData *blocks,const blocktypeList *list):
+	head(*head) {
+		for(unsigned int i = 0 ; i < 16 ; ++i)
+			for(unsigned int j = 0 ; j < 16 ; ++j)
+				for(unsigned int k = 0 ; k < 16 ; ++k)
+					this->blocks[i][j][k] = block(&(*blocks)[i][j][k], list);
+	};
+	
 	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #10
-	segment::segment(const struct rawSegment *src) {}; //TODO #9
+	segment::segment(const struct rawSegment *src,const blocktypeList *list):
+	head(src->head) {
+		for(unsigned int i = 0 ; i < 16 ; ++i)
+			for(unsigned int j = 0 ; j < 16 ; ++j)
+				for(unsigned int k = 0 ; k < 16 ; ++k)
+					blocks[i][j][k] = block(&(src->blocks)[i][j][k], list);
+	};
+	
 	segment::segment(const struct compressedSegment *src) {}; //TODO #10
 	segment::segment(const rawCompressedSegment *src) {}; //TODO #11
 	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO #12

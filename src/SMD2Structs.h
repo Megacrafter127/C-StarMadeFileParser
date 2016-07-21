@@ -53,9 +53,9 @@ namespace smd2{
 		chunkData blocks;
 		segment(const struct segment*);
 		segment(const struct segmentHead*,const chunkData*);
-		segment(const struct segmentHead*,const rawChunkData*);
+		segment(const struct segmentHead*,const rawChunkData*,const blocktypeList*);
 		segment(const struct segmentHead*,const compressedChunkData*);
-		segment(const struct rawSegment*);
+		segment(const struct rawSegment*,const blocktypeList*);
 		segment(const struct compressedSegment*);
 		segment(const rawCompressedSegment*);
 		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
