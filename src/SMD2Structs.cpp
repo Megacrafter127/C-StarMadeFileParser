@@ -24,7 +24,7 @@ namespace smd2{
 		this->orientation=orientation;
 	};
 	block::block(const rawBlock *raw, const blocktypeList *list) {
-		if(!list) std::__throw_invalid_argument("the provided list may not be NULL");
+		if(!list) throw std::invalid_argument("the provided list may not be NULL");
 		uint32_t buff=0;
 		memcpy(&buff+sizeof(uint32_t)-sizeof(rawBlock),raw,sizeof(rawBlock));
 		if(buff) {
@@ -33,7 +33,7 @@ namespace smd2{
 			buff>>=11;
 			blockType type=((blockType*)list)[this->id];
 			if(type==undefined) {
-				std::__throw_invalid_argument("blocktype not defined");
+				throw std::invalid_argument("blocktype not defined");
 			}
 			this->hp=buff;
 			if(type==fullyRotating) {
@@ -59,10 +59,10 @@ namespace smd2{
 		this->orientation=0;
 	};
 	rawBlock *block::toRaw(rawBlock *target, const blocktypeList *list) {
-		if(!list) std::__throw_invalid_argument("the provided list may not be NULL");
+		if(!list) throw std::invalid_argument("the provided list may not be NULL");
 		blockType type=((blockType*)list)[this->id];
 		if(type==undefined) {
-			std::__throw_invalid_argument("blocktype not defined");
+			throw std::invalid_argument("blocktype not defined");
 		}
 		uint32_t buff=this->orientation;
 		if(type==logic) {
