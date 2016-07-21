@@ -9,6 +9,7 @@
 #define SMD2STRUCTS_H_
 
 #include <string.h>
+#include <zlib.h>
 
 namespace smd2{
 	enum blockType {
@@ -30,9 +31,9 @@ namespace smd2{
 		block();
 		rawBlock *toRaw(rawBlock*, const blocktypeList*);
 	};
-	typedef rawBlock rawChunkData[16][16][16];
+	typedef rawBlock rawChunkData[16][16][16]; // note: [Z][Y][X]
 	typedef struct block chunkData[16][16][16];
-	typedef char compressedChunkData[5094], rawCompressedSegment[5120];
+	typedef Bytef compressedChunkData[5094], rawCompressedSegment[5120];
 	rawChunkData *inflate(rawChunkData*,const compressedChunkData*);
 	compressedChunkData *deflate(compressedChunkData*,const rawChunkData*);
 	bool isEmpty(const rawCompressedSegment*);
@@ -53,11 +54,13 @@ namespace smd2{
 		chunkData blocks;
 		segment(const struct segment*);
 		segment(const struct segmentHead*,const chunkData*);
-		segment(const struct segmentHead*,const rawChunkData*);
-		segment(const struct segmentHead*,const compressedChunkData*);
-		segment(const struct rawSegment*);
-		segment(const struct compressedSegment*);
-		segment(const rawCompressedSegment*);
+		segment(const struct segmentHead*,const rawChunkData*,
+				const blocktypeList*);
+		segment(const struct segmentHead*,const compressedChunkData*,
+				const blocktypeList*);
+		segment(const struct rawSegment*,const blocktypeList*);
+		segment(const struct compressedSegment*, const blocktypeList*);
+		segment(const rawCompressedSegment*, const blocktypeList*);
 		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
 	};
 	struct rawSegment {
@@ -84,7 +87,7 @@ namespace smd2{
 		compressedSegment(const rawCompressedSegment*);
 		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
 	};
-	typedef char rawSmd2Head[65540], rawSmd2Index[8];
+	typedef Bytef rawSmd2Head[65540], rawSmd2Index[8];
 	typedef rawCompressedSegment smd2Body[4096];
 	struct smd2Index {
 				signed long id;
