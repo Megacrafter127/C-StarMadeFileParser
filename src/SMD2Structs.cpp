@@ -293,7 +293,22 @@ namespace smd2{
 			throw std::runtime_error("decompression failed");
 	}
 	
-	rawSegment::rawSegment(const rawCompressedSegment *src) {} //TODO #17
+	rawSegment::rawSegment(const rawCompressedSegment *src):
+	head(src, true) {
+		compressedChunkData blocks;
+		memcpy(blocks, src + sizeof(rawCompressedSegment)
+			   - sizeof(compressedChunkData),
+			   sizeof(compressedChunkData));
+		if(!inflate(&this->blocks, &blocks)) {
+			memcpy(blocks, src + sizeof(rawCompressedSegment)
+				   - sizeof(compressedChunkData) - 1,
+				   sizeof(compressedChunkData));
+			if(!inflate(&this->blocks, &blocks))
+				throw std::runtime_error("decompression failed");
+			head = segmentHead(src, false);
+		}
+	}
+	
 	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {} //TODO #18
 	
 	compressedSegment::compressedSegment(const struct compressedSegment *copy) {
