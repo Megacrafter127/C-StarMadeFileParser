@@ -14,8 +14,8 @@
 #include <stdexcept>
 
 uint64_t ntohl(uint64_t in) {
-	if(ntohl(1)!=1) {
-		uint32_t *split=&in,buff;
+	if(ntohl((uint32_t)1)!=1) {
+		uint32_t *split=(uint32_t*)&in,buff;
 		buff=ntohl(split[0]);
 		split[0]=ntohl(split[1]);
 		split[1]=buff;
@@ -24,8 +24,8 @@ uint64_t ntohl(uint64_t in) {
 }
 
 uint64_t htonl(uint64_t in) {
-	if(ntohl(1)!=1) {
-		uint32_t *split=&in,buff;
+	if(ntohl((uint32_t)1)!=1) {
+		uint32_t *split=(uint32_t*)&in,buff;
 		buff=htonl(split[0]);
 		split[0]=htonl(split[1]);
 		split[1]=buff;
@@ -107,9 +107,7 @@ namespace smd2{
 	
 	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {
 		uLongf size = sizeof(rawChunkData);
-		Bytef buf[sizeof(rawChunkData)];
-		switch(uncompress(reinterpret_cast<Bytef*>(trg), &size, *src,
-						  sizeof(compressedChunkData))) {
+		switch(uncompress(reinterpret_cast<Bytef*>(trg), &size, *src, sizeof(compressedChunkData))) {
 			case Z_OK:
 				break;
 			case Z_MEM_ERROR:
@@ -120,7 +118,7 @@ namespace smd2{
 				// the compressed data is either uncomplete or corrupted
 			default:
 				// unknown error code
-				return nullptr;
+				return NULL; //replaced with NULL due to compiler not being C++11 compliant
 		}
 		return trg;
 	}
@@ -192,26 +190,26 @@ namespace smd2{
 			chars[i]=this->unknownChar;
 			i++;
 		}
-		uint64_t dbuff64=htonl(this->timestamp);
+		uint64_t dbuff64=htonl((uint64_t)this->timestamp);
 		memcpy(&(chars[i]),&dbuff64,sizeof(uint64_t));
 		i+=sizeof(uint64_t);
 		
-		uint32_t dbuff32=htonl(this->x);
+		uint32_t dbuff32=htonl((uint32_t)(int32_t)this->x);
 		memcpy(&(chars[i]),&dbuff32,sizeof(int32_t));
 		i+=sizeof(int32_t);
 		
-		dbuff32=htonl(this->y);
+		dbuff32=htonl((uint32_t)(int32_t)this->y);
 		memcpy(&(chars[i]),&dbuff32,sizeof(int32_t));
 		i+=sizeof(int32_t);
 		
-		dbuff32=htonl(this->z);
+		dbuff32=htonl((uint32_t)(int32_t)this->z);
 		memcpy(&(chars[i]),&dbuff32,sizeof(int32_t));
 		i+=sizeof(int32_t);
 		
 		this->type=chars[i];
 		i++;
 		
-		dbuff32=htonl(this->inlen);
+		dbuff32=htonl((uint32_t)this->inlen);
 		memcpy(&(chars[i]),&dbuff32,sizeof(uint32_t));
 		return target;
 	}
@@ -357,12 +355,12 @@ namespace smd2{
 		this->inlen=0;
 	}
 	smd2Index::smd2Index(const rawSmd2Index *raw) {
-		const uint32_t *split=raw;
+		const uint32_t *split=(uint32_t*)raw;
 		this->id=ntohl(split[0]);
 		this->inlen=ntohl(split[1]);
 	}
 	rawSmd2Index *smd2Index::toRaw(rawSmd2Index *trg) {
-		uint32_t *split=trg;
+		uint32_t *split=(uint32_t*)trg;
 		split[0]=htonl((uint32_t)this->id);
 		split[1]=htonl((uint32_t)this->inlen);
 		return trg;
@@ -383,13 +381,13 @@ namespace smd2{
 		const uint32_t *ints=(uint32_t*)raw;
 		this->version=ntohl(ints[0]);
 		const rawSmd2Index *index=(rawSmd2Index*)&(ints[1]);
-		const smd2Index *tindex=&(this->index);
+		smd2Index *tindex=(smd2Index*)&(this->index);
 		for(unsigned int i=0;i<4096;i++) {
 			struct smd2Index current=(&(index[i]));
 			tindex[i]=current;
 		}
-		const uint64_t *timestamps=&(index[4096]);
-		unsigned long long *ttimestamps=&(this->timestamps);
+		const uint64_t *timestamps=(uint64_t*)&(index[4096]);
+		unsigned long long *ttimestamps=(unsigned long long*)&(this->timestamps);
 		for(unsigned int i=0;i<4096;i++) {
 			ttimestamps[i]=ntohl(timestamps[i]);
 		}
