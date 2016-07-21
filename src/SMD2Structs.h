@@ -9,6 +9,7 @@
 #define SMD2STRUCTS_H_
 
 #include <string.h>
+#include <zlib.h>
 
 namespace smd2{
 	enum blockType {
@@ -32,7 +33,7 @@ namespace smd2{
 	};
 	typedef rawBlock rawChunkData[16][16][16];
 	typedef struct block chunkData[16][16][16];
-	typedef char compressedChunkData[5094], rawCompressedSegment[5120];
+	typedef Bytef compressedChunkData[5094], rawCompressedSegment[5120];
 	rawChunkData *inflate(rawChunkData*,const compressedChunkData*);
 	compressedChunkData *deflate(compressedChunkData*,const rawChunkData*);
 	bool isEmpty(const rawCompressedSegment*);

@@ -83,8 +83,34 @@ namespace smd2{
 		return target;
 	};
 	
-	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {}; //TODO #31
+	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {
+		uLongf size = sizeof(rawChunkData);
+		Bytef buf[sizeof(rawChunkData)];
+		switch(uncompress(buf, &size, *src, sizeof(compressedChunkData))) {
+			case Z_OK:
+				break;
+			case Z_MEM_ERROR:
+				// zlib couldn't allocate enough memory
+			case Z_BUF_ERROR:
+				// the uncompressed data can't fit in the output buffer
+			case Z_DATA_ERROR:
+				// the compressed data is either uncomplete or corrupted
+			default:
+				// unknown error code
+				return nullptr;
+		}
+		for(unsigned int x = 0 ; x < 16 ; ++x)
+			for(unsigned int y = 0 ; y < 16 ; ++y)
+				for(unsigned int z = 0 ; z < 16 ; ++z) {
+					(*trg)[x][y][z][0]=buf[x+(16*y)+(256*z)];
+					(*trg)[x][y][z][1]=buf[x+(16*y)+(256*z)+1];
+					(*trg)[x][y][z][2]=buf[x+(16*y)+(256*z)+2];
+				}
+		return trg;
+	}
+	
 	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {}; //TODO #32
+	
 	bool isEmpty(const rawCompressedSegment *segment) {
 		size_t *chars=(size_t*)segment;
 		for(size_t i=0;i<(sizeof(rawCompressedSegment)/sizeof(size_t));i++) {
