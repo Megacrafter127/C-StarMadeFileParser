@@ -219,24 +219,41 @@ namespace smd2{
 		memcpy(&(this->blocks),blocks,sizeof(chunkData));
 	};
 	
+	static inline void inplaceRawChunkToChunk(chunkData& tgt,
+											  const rawChunkData& src,
+											  const blocktypeList* list) {
+		for(unsigned int x = 0 ; x < 16 ; ++x)
+			for(unsigned int y = 0 ; y < 16 ; ++y)
+				for(unsigned int z = 0 ; z < 16 ; ++z)
+					tgt[x][y][z] = block(&src[x][y][z], list);
+	}
+	
 	segment::segment(const struct segmentHead *head,const rawChunkData *blocks,const blocktypeList *list):
 	head(*head) {
-		for(unsigned int i = 0 ; i < 16 ; ++i)
-			for(unsigned int j = 0 ; j < 16 ; ++j)
-				for(unsigned int k = 0 ; k < 16 ; ++k)
-					this->blocks[i][j][k] = block(&(*blocks)[i][j][k], list);
+		inplaceRawChunkToChunk(this->blocks, (*blocks), list);
 	};
 	
-	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks) {}; //TODO #10
+	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks, const blocktypeList* list):
+	head(*head) {
+		rawChunkData rawBlocks;
+		if(!inflate(&rawBlocks, blocks))
+			throw std::runtime_error("decompression failed");
+		inplaceRawChunkToChunk(this->blocks, rawBlocks, list);
+	}
+	
 	segment::segment(const struct rawSegment *src,const blocktypeList *list):
 	head(src->head) {
-		for(unsigned int i = 0 ; i < 16 ; ++i)
-			for(unsigned int j = 0 ; j < 16 ; ++j)
-				for(unsigned int k = 0 ; k < 16 ; ++k)
-					blocks[i][j][k] = block(&(src->blocks)[i][j][k], list);
-	};
+		inplaceRawChunkToChunk(blocks, src->blocks, list);
+	}
 	
-	segment::segment(const struct compressedSegment *src) {}; //TODO #10
+	segment::segment(const struct compressedSegment *src,const blocktypeList *list):
+	head(src->head) {
+		rawChunkData rawBlocks;
+		if(!inflate(&rawBlocks, &src->blocks))
+			throw std::runtime_error("decompression failed");
+		inplaceRawChunkToChunk(blocks, rawBlocks, list);
+	}
+	
 	segment::segment(const rawCompressedSegment *src) {}; //TODO #11
 	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {}; //TODO #12
 	
