@@ -86,7 +86,8 @@ namespace smd2{
 	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {
 		uLongf size = sizeof(rawChunkData);
 		Bytef buf[sizeof(rawChunkData)];
-		switch(uncompress(buf, &size, *src, sizeof(compressedChunkData))) {
+		switch(uncompress(reinterpret_cast<Bytef*>(trg), &size, *src,
+						  sizeof(compressedChunkData))) {
 			case Z_OK:
 				break;
 			case Z_MEM_ERROR:
@@ -99,11 +100,6 @@ namespace smd2{
 				// unknown error code
 				return nullptr;
 		}
-		for(unsigned int x = 0 ; x < 16 ; ++x)
-			for(unsigned int y = 0 ; y < 16 ; ++y)
-				for(unsigned int z = 0 ; z < 16 ; ++z)
-					for(unsigned int k = 0 ; k < 3 ; ++k)
-						(*trg)[x][y][z][k]=buf[x+(16*y)+(256*z)+k];
 		return trg;
 	}
 	
@@ -217,22 +213,22 @@ namespace smd2{
 		memcpy(&(this->blocks),blocks,sizeof(chunkData));
 	}
 	
-	static inline void inplaceRawChunkToChunk(chunkData& tgt,
+	static inline void inplaceRawChunkToChunk(chunkData& trg,
 											  const rawChunkData& src,
 											  const blocktypeList* list) {
 		for(unsigned int x = 0 ; x < 16 ; ++x)
 			for(unsigned int y = 0 ; y < 16 ; ++y)
 				for(unsigned int z = 0 ; z < 16 ; ++z)
-					tgt[x][y][z] = block(&src[x][y][z], list);
+					trg[x][y][z] = block(&src[x][y][z], list);
 	}
 	
 	segment::segment(const struct segmentHead *head,const rawChunkData *blocks,const blocktypeList *list):
-	head(*head) {
+	head(head) {
 		inplaceRawChunkToChunk(this->blocks, (*blocks), list);
 	}
 	
 	segment::segment(const struct segmentHead *head,const compressedChunkData *blocks, const blocktypeList* list):
-	head(*head) {
+	head(head) {
 		rawChunkData rawBlocks;
 		if(!inflate(&rawBlocks, blocks))
 			throw std::runtime_error("decompression failed");
@@ -263,9 +259,20 @@ namespace smd2{
 		memcpy(&(this->blocks),blocks,sizeof(rawChunkData));
 	}
 	rawSegment::rawSegment(const struct segmentHead *head,const chunkData*) {} //TODO #15
-	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData*) {} //TODO #16
+	
+	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData* blocks):
+	head(head) {
+		if(!inflate(&this->blocks, blocks))
+			throw std::runtime_error("decompression failed");
+	}
+	
 	rawSegment::rawSegment(const struct segment *src) {} //TODO #15
-	rawSegment::rawSegment(const struct compressedSegment *src) {} //TODO #16
+	rawSegment::rawSegment(const struct compressedSegment *src):
+	head(src->head) {
+		if(!inflate(&this->blocks, &src->blocks))
+			throw std::runtime_error("decompression failed");
+	}
+	
 	rawSegment::rawSegment(const rawCompressedSegment *src) {} //TODO #17
 	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {} //TODO #18
 	

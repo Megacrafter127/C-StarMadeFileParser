@@ -31,7 +31,7 @@ namespace smd2{
 		block();
 		rawBlock *toRaw(rawBlock*, const blocktypeList*);
 	};
-	typedef rawBlock rawChunkData[16][16][16];
+	typedef rawBlock rawChunkData[16][16][16]; // note: [Z][Y][X]
 	typedef struct block chunkData[16][16][16];
 	typedef Bytef compressedChunkData[5094], rawCompressedSegment[5120];
 	rawChunkData *inflate(rawChunkData*,const compressedChunkData*);
@@ -85,7 +85,7 @@ namespace smd2{
 		compressedSegment(const rawCompressedSegment*);
 		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
 	};
-	typedef char rawSmd2Head[65540], rawSmd2Index[8];
+	typedef Bytef rawSmd2Head[65540], rawSmd2Index[8];
 	typedef rawCompressedSegment smd2Body[4096];
 	struct smd2Index {
 				signed long id;
