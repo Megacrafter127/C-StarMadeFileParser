@@ -13,27 +13,107 @@
 #include <zlib.h>
 #include <stdexcept>
 
-//*
-static uint64_t ntohl(uint64_t in) {
-	if(ntohl((uint32_t)1)!=1) {
-		uint32_t *split=(uint32_t*)&in,buff;
-		buff=ntohl(split[0]);
-		split[0]=ntohl(split[1]);
-		split[1]=buff;
-	}
-	return in;
+static bool isLittleEndian() {
+	return ntohl((uint32_t)1)!=1;
 }
 
-static uint64_t htonl(uint64_t in) {
-	if(ntohl((uint32_t)1)!=1) {
-		uint32_t *split=(uint32_t*)&in,buff;
-		buff=htonl(split[0]);
-		split[0]=htonl(split[1]);
-		split[1]=buff;
-	}
-	return in;
+namespace detail {
+	
+	template<class T>
+	struct identity {
+		typedef T t;
+	};
+	
+	template<class IntT>
+	struct wrapper {};
+	
+	template<>
+	struct wrapper<uint32_t> {
+		static uint32_t ntoh(uint32_t in) {
+			return ntohl(in);
+		}
+		
+		static uint32_t hton(uint32_t in) {
+			return htonl(in);
+		}
+	};
+	
+	template<>
+	struct wrapper<int32_t> {
+		static int32_t ntoh(int32_t in) {
+			uint32_t dbuff32 =
+			wrapper<uint32_t>::ntoh(reinterpret_cast<uint32_t&>(in));
+			return reinterpret_cast<int32_t&>(dbuff32);
+		}
+		
+		static int32_t hton(int32_t in) {
+			uint32_t dbuff32 =
+			wrapper<uint32_t>::hton(reinterpret_cast<uint32_t&>(in));
+			return reinterpret_cast<int32_t&>(dbuff32);
+		}
+	};
+	
+	template<>
+	struct wrapper<uint64_t> {
+		static uint64_t ntoh(uint64_t in) {
+			if(isLittleEndian()) {
+				uint32_t *split=(uint32_t*)&in,buff;
+				buff=wrapper<uint32_t>::ntoh(split[0]);
+				split[0]=wrapper<uint32_t>::ntoh(split[1]);
+				split[1]=buff;
+			}
+			return in;
+		}
+		
+		static uint64_t hton(uint64_t in) {
+			if(isLittleEndian()) {
+				uint32_t *split=(uint32_t*)&in,buff;
+				buff=wrapper<uint32_t>::hton(split[0]);
+				split[0]=wrapper<uint32_t>::hton(split[1]);
+				split[1]=buff;
+			}
+			return in;
+		}
+	};
+	
+	template<>
+	struct wrapper<int64_t> {
+		static int64_t ntoh(int64_t in) {
+			uint64_t dbuff64 =
+				wrapper<uint64_t>::ntoh(reinterpret_cast<uint64_t&>(in));
+			return reinterpret_cast<int64_t&>(dbuff64);
+		}
+		
+		static int64_t hton(int64_t in) {
+			uint64_t dbuff64 =
+				wrapper<uint64_t>::hton(reinterpret_cast<uint64_t&>(in));
+			return reinterpret_cast<int64_t&>(dbuff64);
+		}
+	};
 }
-//*/
+
+template<class IntT>
+IntT ntoh(typename detail::identity<IntT>::t in) {
+	return detail::wrapper<IntT>::ntoh(in);
+}
+
+template<class IntT>
+IntT hton(typename detail::identity<IntT>::t in) {
+	return detail::wrapper<IntT>::hton(in);
+}
+
+template<class IntT>
+IntT readFromNetBuffer(void* src) {
+	IntT in;
+	memcpy(&in, src, sizeof(IntT));
+	return ntoh<IntT>(in);
+}
+
+template<class IntT>
+void writeToNetBuffer(void* trg, typename detail::identity<IntT>::t src) {
+	src = hton<IntT>(src);
+	memcpy(trg, &src, sizeof(IntT));
+}
 
 namespace smd2{
 	
@@ -51,7 +131,7 @@ namespace smd2{
 		uint32_t buff=0;
 		memcpy(&buff+sizeof(uint32_t)-sizeof(rawBlock),raw,sizeof(rawBlock));
 		if(buff) {
-			buff=ntohl(buff);
+			buff=ntoh<uint32_t>(buff);
 			this->id=buff;
 			buff>>=11;
 			blockType type=((blockType*)list)[this->id];
@@ -101,7 +181,7 @@ namespace smd2{
 		}
 		buff<<=11;
 		buff+=id;
-		buff=htonl(buff);
+		buff=hton<uint32_t>(buff);
 		memcpy(target,&buff+sizeof(uint32_t)-sizeof(rawBlock),sizeof(rawBlock));
 		return target;
 	}
@@ -167,27 +247,17 @@ namespace smd2{
 			this->unknownChar=chars[i];
 			i++;
 		}
-		this->timestamp=ntohl(*(uint64_t*)&(raw[i]));
+		this->timestamp=readFromNetBuffer<uint64_t>(&chars[i]);
 		i+=sizeof(uint64_t);
-		
-		uint32_t dbuff32;
-		memcpy(&dbuff32,&(chars[i]),sizeof(int32_t));
-		this->x=(int32_t)ntohl(dbuff32);
+		this->x=readFromNetBuffer<int32_t>(&chars[i]);
 		i+=sizeof(int32_t);
-		
-		memcpy(&dbuff32,&(chars[i]),sizeof(int32_t));
-		this->y=(int32_t)ntohl(dbuff32);
+		this->y=readFromNetBuffer<int32_t>(&chars[i]);
 		i+=sizeof(int32_t);
-		
-		memcpy(&dbuff32,&(chars[i]),sizeof(int32_t));
-		this->z=(int32_t)ntohl(dbuff32);
+		this->z=readFromNetBuffer<int32_t>(&chars[i]);
 		i+=sizeof(int32_t);
-		
 		this->type=chars[i];
 		i++;
-		
-		memcpy(&dbuff32,&(chars[i]),sizeof(uint32_t));
-		this->inlen=ntohl(dbuff32);
+		this->inlen=readFromNetBuffer<uint32_t>(&chars[i]);
 	}
 	segmentHead::segmentHead() {
 		this->unknownChar=0;
@@ -206,27 +276,17 @@ namespace smd2{
 			chars[i]=this->unknownChar;
 			i++;
 		}
-		uint64_t dbuff64=htonl((uint64_t)this->timestamp);
-		memcpy(&(chars[i]),&dbuff64,sizeof(uint64_t));
+		writeToNetBuffer<uint64_t>(&chars[i], this->timestamp);
 		i+=sizeof(uint64_t);
-		
-		uint32_t dbuff32=htonl((uint32_t)(int32_t)this->x);
-		memcpy(&(chars[i]),&dbuff32,sizeof(int32_t));
+		writeToNetBuffer<int32_t>(&chars[i], this->x);
 		i+=sizeof(int32_t);
-		
-		dbuff32=htonl((uint32_t)(int32_t)this->y);
-		memcpy(&(chars[i]),&dbuff32,sizeof(int32_t));
+		writeToNetBuffer<int32_t>(&chars[i], this->y);
 		i+=sizeof(int32_t);
-		
-		dbuff32=htonl((uint32_t)(int32_t)this->z);
-		memcpy(&(chars[i]),&dbuff32,sizeof(int32_t));
+		writeToNetBuffer<int32_t>(&chars[i], this->z);
 		i+=sizeof(int32_t);
-		
 		chars[i]=this->type;
 		i++;
-		
-		dbuff32=htonl((uint32_t)this->inlen);
-		memcpy(&(chars[i]),&dbuff32,sizeof(uint32_t));
+		writeToNetBuffer<uint32_t>(&chars[i], this->inlen);
 		return target;
 	}
 	
@@ -408,13 +468,13 @@ namespace smd2{
 	}
 	smd2Index::smd2Index(const rawSmd2Index *raw) {
 		const uint32_t *split=(uint32_t*)raw;
-		this->id=ntohl(split[0]);
-		this->inlen=ntohl(split[1]);
+		this->id=ntoh<uint32_t>(split[0]);
+		this->inlen=ntoh<uint32_t>(split[1]);
 	}
 	rawSmd2Index *smd2Index::toRaw(rawSmd2Index *trg) const {
 		uint32_t *split=(uint32_t*)trg;
-		split[0]=htonl((uint32_t)this->id);
-		split[1]=htonl((uint32_t)this->inlen);
+		split[0]=hton<uint32_t>(this->id);
+		split[1]=hton<uint32_t>(this->inlen);
 		return trg;
 	}
 	bool smd2Index::isValid() {
@@ -431,7 +491,7 @@ namespace smd2{
 	}
 	smd2Head::smd2Head(const rawSmd2Head *raw) {
 		const uint32_t *ints=(uint32_t*)raw;
-		this->version=ntohl(ints[0]);
+		this->version=ntoh<uint32_t>(ints[0]);
 		const rawSmd2Index *index=(rawSmd2Index*)&(ints[1]);
 		smd2Index *tindex=(smd2Index*)&(this->index);
 		for(unsigned int i=0;i<4096;i++) {
@@ -441,7 +501,7 @@ namespace smd2{
 		const uint64_t *timestamps=(uint64_t*)&(index[4096]);
 		unsigned long long *ttimestamps=(unsigned long long*)&(this->timestamps);
 		for(unsigned int i=0;i<4096;i++) {
-			ttimestamps[i]=ntohl(timestamps[i]);
+			ttimestamps[i]=ntoh<uint64_t>(timestamps[i]);
 		}
 	} //TODO #26
 	rawSmd2Head *smd2Head::toRaw(rawSmd2Head *target) const {
