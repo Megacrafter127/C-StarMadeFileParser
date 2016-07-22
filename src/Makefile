@@ -1,5 +1,6 @@
 CXX      := g++
 CXXFLAGS := -Wall -Wextra -pedantic -std=c++03
+LDFLAGS  := -lz
 SRC      :=$(wildcard ./*.cpp)
 OBJDIR   := ./obj
 BINDIR   := ./bin
