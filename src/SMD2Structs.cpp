@@ -13,7 +13,7 @@
 #include <zlib.h>
 #include <stdexcept>
 
-/*
+//*
 static uint64_t ntohl(uint64_t in) {
 	if(ntohl((uint32_t)1)!=1) {
 		uint32_t *split=(uint32_t*)&in,buff;
@@ -350,7 +350,7 @@ namespace smd2{
 	}
 	
 	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg, const bool offset) const {
-		trg=head.toRaw(trg, offset);
+		head.toRaw(trg, offset);
 		compressedChunkData zipped;
 		if(!deflate(&zipped, &blocks))
 			return NULL;
@@ -388,8 +388,11 @@ namespace smd2{
 			   sizeof(compressedChunkData));
 	}
 	
-	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) const {} //TODO #24
-	
+	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) const {
+		head.toRaw(trg, offset);
+		memcpy(trg + segmentHeaderSize + offset, blocks, sizeof(compressedChunkData));
+		return trg;
+	}
 	
 	smd2Index::smd2Index(const struct smd2Index *copy) {
 		this->id=copy->id;
