@@ -81,7 +81,7 @@ namespace smd2{
 		this->active=false;
 		this->orientation=0;
 	}
-	rawBlock *block::toRaw(rawBlock *target, const blocktypeList *list) {
+	rawBlock *block::toRaw(rawBlock *target, const blocktypeList *list) const {
 		if(!list) throw std::invalid_argument("the provided list may not be NULL");
 		blockType type=((blockType*)list)[this->id];
 		if(type==undefined) {
@@ -198,7 +198,8 @@ namespace smd2{
 		this->type=0;
 		this->inlen=0;
 	}
-	rawCompressedSegment *segmentHead::toRaw(rawCompressedSegment *target,const bool offset) {
+	
+	rawCompressedSegment *segmentHead::toRaw(rawCompressedSegment *target,const bool offset) const {
 		size_t i=0;
 		char *chars=(char*)target;
 		if(offset) {
@@ -221,7 +222,7 @@ namespace smd2{
 		memcpy(&(chars[i]),&dbuff32,sizeof(int32_t));
 		i+=sizeof(int32_t);
 		
-		this->type=chars[i];
+		chars[i]=this->type;
 		i++;
 		
 		dbuff32=htonl((uint32_t)this->inlen);
@@ -291,31 +292,26 @@ namespace smd2{
 		inplaceRawChunkToChunk(this->blocks, rawBlocks, list);
 	}
 	
-	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const blocktypeList* list,const bool offset) {
-		trg=head.toRaw(trg, offset);
-		rawChunkData rawBlocks;
-		for(unsigned int z = 0 ; z < 16 ; ++z)
-			for(unsigned int y = 0 ; y < 16 ; ++y)
-				for(unsigned int x = 0 ; x < 16 ; ++x)
-					blocks[z][y][x].toRaw(&rawBlocks[z][y][x], list);
-		compressedChunkData zipped;
-		try {
-			deflate(&zipped, &rawBlocks);
-		} catch(...) {
-			return NULL;
-		}
-		memcpy(trg + segmentHeaderSize + offset, zipped, sizeof(compressedChunkData));
-		return trg;
+	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const blocktypeList* list,const bool offset) const {
+		return rawSegment(this, list).toRawCompressed(trg, offset);
 	}
 	
 	rawSegment::rawSegment(const struct rawSegment *copy) {
 		memcpy(this,copy,sizeof(struct rawSegment));
 	}
+	
 	rawSegment::rawSegment(const struct segmentHead *head,const rawChunkData *blocks) {
 		this->head=*head;
 		memcpy(&(this->blocks),blocks,sizeof(rawChunkData));
 	}
-	rawSegment::rawSegment(const struct segmentHead *head,const chunkData*) {} //TODO #15
+	
+	rawSegment::rawSegment(const struct segmentHead *head,const chunkData* blocks, const blocktypeList* list):
+	head(head) {
+		for(unsigned int z = 0 ; z < 16 ; ++z)
+			for(unsigned int y = 0 ; y < 16 ; ++y)
+				for(unsigned int x = 0 ; x < 16 ; ++x)
+					(*blocks)[z][y][x].toRaw(&this->blocks[z][y][x], list);
+	}
 	
 	rawSegment::rawSegment(const struct segmentHead *head,const compressedChunkData* blocks):
 	head(head) {
@@ -323,7 +319,13 @@ namespace smd2{
 			throw std::runtime_error("decompression failed");
 	}
 	
-	rawSegment::rawSegment(const struct segment *src) {} //TODO #15
+	rawSegment::rawSegment(const struct segment *src, const blocktypeList* list):
+	head(src->head) {
+		for(unsigned int z = 0 ; z < 16 ; ++z)
+			for(unsigned int y = 0 ; y < 16 ; ++y)
+				for(unsigned int x = 0 ; x < 16 ; ++x)
+					src->blocks[z][y][x].toRaw(&blocks[z][y][x], list);
+	}
 	
 	rawSegment::rawSegment(const struct compressedSegment *src):
 	head(src->head) {
@@ -347,7 +349,17 @@ namespace smd2{
 		}
 	}
 	
-	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {} //TODO #18
+	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg, const bool offset) const {
+		trg=head.toRaw(trg, offset);
+		compressedChunkData zipped;
+		try {
+			deflate(&zipped, &blocks);
+		} catch(...) {
+			return NULL;
+		}
+		memcpy(trg + segmentHeaderSize + offset, zipped, sizeof(compressedChunkData));
+		return trg;
+	}
 	
 	compressedSegment::compressedSegment(const struct compressedSegment *copy) {
 		memcpy(this,copy,sizeof(struct compressedSegment));
@@ -368,7 +380,7 @@ namespace smd2{
 			   sizeof(compressedChunkData));
 	}
 	
-	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {} //TODO #24
+	rawCompressedSegment *compressedSegment::toRawCompressed(rawCompressedSegment *trg,const bool offset) const {} //TODO #24
 	
 	
 	smd2Index::smd2Index(const struct smd2Index *copy) {
@@ -388,7 +400,7 @@ namespace smd2{
 		this->id=ntohl(split[0]);
 		this->inlen=ntohl(split[1]);
 	}
-	rawSmd2Index *smd2Index::toRaw(rawSmd2Index *trg) {
+	rawSmd2Index *smd2Index::toRaw(rawSmd2Index *trg) const {
 		uint32_t *split=(uint32_t*)trg;
 		split[0]=htonl((uint32_t)this->id);
 		split[1]=htonl((uint32_t)this->inlen);
@@ -421,7 +433,7 @@ namespace smd2{
 			ttimestamps[i]=ntohl(timestamps[i]);
 		}
 	} //TODO #26
-	rawSmd2Head *smd2Head::toRaw(rawSmd2Head *target) {
+	rawSmd2Head *smd2Head::toRaw(rawSmd2Head *target) const {
 		
 	} //TODO #27
 	

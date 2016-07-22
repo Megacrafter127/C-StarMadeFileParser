@@ -29,7 +29,7 @@ namespace smd2{
 		block(const unsigned int, const unsigned int, const bool, const unsigned int);
 		block(const rawBlock*, const blocktypeList*);
 		block();
-		rawBlock *toRaw(rawBlock*, const blocktypeList*);
+		rawBlock *toRaw(rawBlock*, const blocktypeList*) const;
 	};
 	typedef rawBlock rawChunkData[16][16][16]; // note: [Z][Y][X]
 	typedef struct block chunkData[16][16][16];
@@ -47,7 +47,7 @@ namespace smd2{
 		segmentHead(const unsigned char, const unsigned long long, const signed long, const signed long, const signed long, const unsigned char, const unsigned long);
 		segmentHead(const rawCompressedSegment*,const bool);
 		segmentHead();
-		rawCompressedSegment *toRaw(rawCompressedSegment*,const bool);
+		rawCompressedSegment *toRaw(rawCompressedSegment*,const bool) const;
 	};
 	struct segment {
 		struct segmentHead head;
@@ -61,19 +61,19 @@ namespace smd2{
 		segment(const struct rawSegment*,const blocktypeList*);
 		segment(const struct compressedSegment*, const blocktypeList*);
 		segment(const rawCompressedSegment*, const blocktypeList*);
-		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const blocktypeList*,const bool);
+		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const blocktypeList*,const bool) const;
 	};
 	struct rawSegment {
 		struct segmentHead head;
 		rawChunkData blocks;
 		rawSegment(const struct rawSegment*);
 		rawSegment(const struct segmentHead*,const rawChunkData*);
-		rawSegment(const struct segmentHead*,const chunkData*);
+		rawSegment(const struct segmentHead*,const chunkData*,const blocktypeList*);
 		rawSegment(const struct segmentHead*,const compressedChunkData*);
-		rawSegment(const struct segment*);
+		rawSegment(const struct segment*,const blocktypeList*);
 		rawSegment(const struct compressedSegment*);
 		rawSegment(const rawCompressedSegment*);
-		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
+		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool) const;
 	};
 	struct compressedSegment {
 		struct segmentHead head;
@@ -85,7 +85,7 @@ namespace smd2{
 		compressedSegment(const struct segment*);
 		compressedSegment(const struct rawSegment*);
 		compressedSegment(const rawCompressedSegment*);
-		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
+		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool) const;
 	};
 	typedef Bytef rawSmd2Head[65540], rawSmd2Index[8];
 	typedef rawCompressedSegment smd2Body[4096];
@@ -96,7 +96,7 @@ namespace smd2{
 				smd2Index(const signed long, const unsigned long);
 				smd2Index();
 				smd2Index(const rawSmd2Index*);
-				rawSmd2Index *toRaw(rawSmd2Index*);
+				rawSmd2Index *toRaw(rawSmd2Index*) const;
 				bool isValid();
 	};
 	typedef struct smd2Index fullSmd2Index[16][16][16];
@@ -108,7 +108,7 @@ namespace smd2{
 		smd2Head(const struct smd2Head*);
 		smd2Head(const unsigned long, const fullSmd2Index*, const fullSmd2TimestampHead*);
 		smd2Head(const rawSmd2Head*);
-		rawSmd2Head *toRaw(rawSmd2Head*);
+		rawSmd2Head *toRaw(rawSmd2Head*) const;
 	};
 	unsigned int getSegmentSlotCountFromSMD2Size(const size_t);
 	size_t getSMD2SizeFromSegmentSlotCount(const unsigned int);
