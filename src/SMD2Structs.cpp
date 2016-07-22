@@ -13,7 +13,7 @@
 #include <zlib.h>
 #include <stdexcept>
 
-//*
+/*
 static uint64_t ntohl(uint64_t in) {
 	if(ntohl((uint32_t)1)!=1) {
 		uint32_t *split=(uint32_t*)&in,buff;
@@ -352,11 +352,8 @@ namespace smd2{
 	rawCompressedSegment *rawSegment::toRawCompressed(rawCompressedSegment *trg, const bool offset) const {
 		trg=head.toRaw(trg, offset);
 		compressedChunkData zipped;
-		try {
-			deflate(&zipped, &blocks);
-		} catch(...) {
+		if(!deflate(&zipped, &blocks))
 			return NULL;
-		}
 		memcpy(trg + segmentHeaderSize + offset, zipped, sizeof(compressedChunkData));
 		return trg;
 	}
@@ -369,9 +366,20 @@ namespace smd2{
 		memcpy(&(this->blocks),blocks,sizeof(compressedChunkData));
 	}
 	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks) {} //TODO #21
-	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks) {} //TODO #22
+	
+	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks):
+	head(head) {
+		if(!deflate(&this->blocks, blocks))
+			throw std::runtime_error("compression failed");
+	}
+	
 	compressedSegment::compressedSegment(const struct segment *src) {} //TODO #21
-	compressedSegment::compressedSegment(const struct rawSegment *src) {} //TODO #22
+	
+	compressedSegment::compressedSegment(const struct rawSegment *src):
+	head(src->head) {
+		if(!deflate(&blocks, &src->blocks))
+			throw std::runtime_error("compression failed");
+	}
 	
 	compressedSegment::compressedSegment(const rawCompressedSegment *src):
 	head(src, true) {
