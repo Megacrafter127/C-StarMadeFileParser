@@ -61,7 +61,7 @@ namespace smd2{
 		segment(const struct rawSegment*,const blocktypeList*);
 		segment(const struct compressedSegment*, const blocktypeList*);
 		segment(const rawCompressedSegment*, const blocktypeList*);
-		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool);
+		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const blocktypeList*,const bool);
 	};
 	struct rawSegment {
 		struct segmentHead head;

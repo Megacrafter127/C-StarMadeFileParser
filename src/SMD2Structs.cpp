@@ -240,10 +240,10 @@ namespace smd2{
 	static void inplaceRawChunkToChunk(chunkData& trg,
 											  const rawChunkData& src,
 											  const blocktypeList* list) {
-		for(unsigned int x = 0 ; x < 16 ; ++x)
+		for(unsigned int z = 0 ; z < 16 ; ++z)
 			for(unsigned int y = 0 ; y < 16 ; ++y)
-				for(unsigned int z = 0 ; z < 16 ; ++z)
-					trg[x][y][z] = block(&src[x][y][z], list);
+				for(unsigned int x = 0 ; x < 16 ; ++x)
+					trg[z][y][x] = block(&src[z][y][x], list);
 	}
 	
 	segment::segment(const struct segmentHead *head,const rawChunkData *blocks,const blocktypeList *list):
@@ -273,18 +273,17 @@ namespace smd2{
 		inplaceRawChunkToChunk(blocks, rawBlocks, list);
 	}
 	
+	static const std::size_t segmentHeaderSize =
+	sizeof(rawCompressedSegment) - sizeof(compressedChunkData) - 1;
+	
 	segment::segment(const rawCompressedSegment *src,
 					 const blocktypeList *list):
 	head(src, true) {
 		compressedChunkData blocks;
 		rawChunkData rawBlocks;
-		memcpy(blocks, src + sizeof(rawCompressedSegment)
-						   - sizeof(compressedChunkData),
-			   sizeof(compressedChunkData));
+		memcpy(blocks, src+segmentHeaderSize + 1, sizeof(compressedChunkData));
 		if(!inflate(&rawBlocks, &blocks)) {
-			memcpy(blocks, src + sizeof(rawCompressedSegment)
-							   - sizeof(compressedChunkData) - 1,
-				   sizeof(compressedChunkData));
+			memcpy(blocks, src+segmentHeaderSize, sizeof(compressedChunkData));
 			if(!inflate(&rawBlocks, &blocks))
 				throw std::runtime_error("decompression failed");
 			head = segmentHead(src, false);
@@ -292,7 +291,22 @@ namespace smd2{
 		inplaceRawChunkToChunk(this->blocks, rawBlocks, list);
 	}
 	
-	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const bool offset) {} //TODO #12
+	rawCompressedSegment *segment::toRawCompressed(rawCompressedSegment *trg,const blocktypeList* list,const bool offset) {
+		trg=head.toRaw(trg, offset);
+		rawChunkData rawBlocks;
+		for(unsigned int z = 0 ; z < 16 ; ++z)
+			for(unsigned int y = 0 ; y < 16 ; ++y)
+				for(unsigned int x = 0 ; x < 16 ; ++x)
+					blocks[z][y][x].toRaw(&rawBlocks[z][y][x], list);
+		compressedChunkData zipped;
+		try {
+			deflate(&zipped, &rawBlocks);
+		} catch(...) {
+			return NULL;
+		}
+		memcpy(trg + segmentHeaderSize + offset, zipped, sizeof(compressedChunkData));
+		return trg;
+	}
 	
 	rawSegment::rawSegment(const struct rawSegment *copy) {
 		memcpy(this,copy,sizeof(struct rawSegment));
