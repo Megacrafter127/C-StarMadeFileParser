@@ -13,7 +13,8 @@
 #include <zlib.h>
 #include <stdexcept>
 
-uint64_t ntohl(uint64_t in) {
+//*
+static uint64_t ntohl(uint64_t in) {
 	if(ntohl((uint32_t)1)!=1) {
 		uint32_t *split=(uint32_t*)&in,buff;
 		buff=ntohl(split[0]);
@@ -23,7 +24,7 @@ uint64_t ntohl(uint64_t in) {
 	return in;
 }
 
-uint64_t htonl(uint64_t in) {
+static uint64_t htonl(uint64_t in) {
 	if(ntohl((uint32_t)1)!=1) {
 		uint32_t *split=(uint32_t*)&in,buff;
 		buff=htonl(split[0]);
@@ -32,9 +33,9 @@ uint64_t htonl(uint64_t in) {
 	}
 	return in;
 }
+//*/
 
 namespace smd2{
-	
 	
 	block::block(const struct block *copy) {
 		memcpy(this,copy,sizeof(struct block));
@@ -107,7 +108,7 @@ namespace smd2{
 	
 	rawChunkData *inflate(rawChunkData *trg,const compressedChunkData *src) {
 		uLongf size = sizeof(rawChunkData);
-		switch(uncompress(reinterpret_cast<Bytef*>(trg), &size, *src, sizeof(compressedChunkData))) {
+		switch(uncompress(reinterpret_cast<Bytef*>(*trg), &size, *src, sizeof(compressedChunkData))) {
 			case Z_OK:
 				break;
 			case Z_MEM_ERROR:
@@ -118,12 +119,26 @@ namespace smd2{
 				// the compressed data is either uncomplete or corrupted
 			default:
 				// unknown error code
-				return NULL; //replaced with NULL due to compiler not being C++11 compliant
+				return NULL;
 		}
 		return trg;
 	}
 	
-	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {} //TODO #32
+	compressedChunkData *deflate(compressedChunkData *trg,const rawChunkData *src) {
+		uLongf size = sizeof(compressedChunkData);
+		switch(compress(*trg, &size, reinterpret_cast<const Byte*>(*src), sizeof(rawChunkData))) {
+			case Z_OK:
+				break;
+			case Z_MEM_ERROR:
+				// zlib couldn't allocate enough memory
+			case Z_BUF_ERROR:
+				// the uncompressed data can't fit in the output buffer
+			default:
+				// unknown error code
+				return NULL;
+		}
+		return trg;
+	}
 	
 	bool isEmpty(const rawCompressedSegment *segment) {
 		size_t *chars=(size_t*)segment;
@@ -222,7 +237,7 @@ namespace smd2{
 		memcpy(&(this->blocks),blocks,sizeof(chunkData));
 	}
 	
-	static inline void inplaceRawChunkToChunk(chunkData& trg,
+	static void inplaceRawChunkToChunk(chunkData& trg,
 											  const rawChunkData& src,
 											  const blocktypeList* list) {
 		for(unsigned int x = 0 ; x < 16 ; ++x)
