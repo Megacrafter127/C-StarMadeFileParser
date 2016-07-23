@@ -103,7 +103,7 @@ IntT hton(typename detail::identity<IntT>::t in) {
 }
 
 template<class IntT>
-IntT readFromNetBuffer(void* src) {
+IntT readFromNetBuffer(const void* src) {
 	IntT in;
 	memcpy(&in, src, sizeof(IntT));
 	return ntoh<IntT>(in);
@@ -489,23 +489,37 @@ namespace smd2{
 		memcpy(&(this->index),index,sizeof(fullSmd2Index));
 		memcpy(&(this->timestamps),timestamps,sizeof(fullSmd2TimestampHead));
 	}
-	smd2Head::smd2Head(const rawSmd2Head *raw) {
-		const uint32_t *ints=(uint32_t*)raw;
-		this->version=ntoh<uint32_t>(ints[0]);
-		const rawSmd2Index *index=(rawSmd2Index*)&(ints[1]);
-		smd2Index *tindex=(smd2Index*)&(this->index);
-		for(unsigned int i=0;i<4096;i++) {
-			struct smd2Index current=(&(index[i]));
-			tindex[i]=current;
-		}
-		const uint64_t *timestamps=(uint64_t*)&(index[4096]);
-		unsigned long long *ttimestamps=(unsigned long long*)&(this->timestamps);
-		for(unsigned int i=0;i<4096;i++) {
-			ttimestamps[i]=ntoh<uint64_t>(timestamps[i]);
-		}
-	} //TODO #26
-	rawSmd2Head *smd2Head::toRaw(rawSmd2Head *target) const {
+	smd2Head::smd2Head(const rawSmd2Head *ptr) {
+		const Bytef *src = *ptr;
+		version=readFromNetBuffer<int32_t>(src);
+		src += sizeof(int32_t);
 		
+		const Bytef *end = src + (4096 * sizeof(rawSmd2Index));
+		for(smd2Index *trg = reinterpret_cast<smd2Index*>(&index) ;
+			src != end ; src += sizeof(rawSmd2Index), ++trg)
+			*trg = smd2Index(reinterpret_cast<const rawSmd2Index*>(src));
+		
+		end += 4096 * sizeof(int64_t);
+		for(int64_t *trg = reinterpret_cast<int64_t*>(&timestamps) ;
+			src != end ; src += sizeof(int64_t), ++trg)
+			*trg = readFromNetBuffer<int64_t>(src);
+	} //TODO #26
+	
+	rawSmd2Head *smd2Head::toRaw(rawSmd2Head *ptr) const {
+		Bytef *trg = *ptr;
+		writeToNetBuffer<int32_t>(trg, version);
+		trg += sizeof(int32_t);
+		
+		Bytef *end = trg + (4096 * sizeof(rawSmd2Index));
+		for(const smd2Index *src = reinterpret_cast<const smd2Index*>(&index) ;
+			trg != end ; trg += sizeof(rawSmd2Index), ++src)
+			src->toRaw(reinterpret_cast<rawSmd2Index*>(trg));
+		
+		end += 4096 * sizeof(int64_t);
+		for(const int64_t *src = reinterpret_cast<const int64_t*>(&timestamps) ;
+			trg != end ; trg += sizeof(rawSmd2Index), ++src)
+			writeToNetBuffer<int64_t>(trg, *src);
+		return ptr;
 	} //TODO #27
 	
 	unsigned int getSegmentSlotCountFromSMD2Size(const size_t size) {

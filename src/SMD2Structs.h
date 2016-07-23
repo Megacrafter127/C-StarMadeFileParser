@@ -39,7 +39,7 @@ namespace smd2{
 	bool isEmpty(const rawCompressedSegment*);
 	struct segmentHead {
 		unsigned char unknownChar;
-		unsigned long long timestamp;
+		int64_t timestamp;
 		signed long x,y,z;
 		unsigned char type;
 		unsigned long inlen;
@@ -100,9 +100,9 @@ namespace smd2{
 				bool isValid();
 	};
 	typedef struct smd2Index fullSmd2Index[16][16][16];
-	typedef unsigned long long fullSmd2TimestampHead[16][16][16];
+	typedef int64_t fullSmd2TimestampHead[16][16][16];
 	struct smd2Head {
-		unsigned long version;
+		int32_t version;
 		fullSmd2Index index;
 		fullSmd2TimestampHead timestamps;
 		smd2Head(const struct smd2Head*);
