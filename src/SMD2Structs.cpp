@@ -425,7 +425,16 @@ namespace smd2{
 		this->head=*head;
 		memcpy(&(this->blocks),blocks,sizeof(compressedChunkData));
 	}
-	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks) {} //TODO #21
+	compressedSegment::compressedSegment(const struct segmentHead *head,const chunkData *blocks, const blocktypeList* list):
+	head(head) {
+		rawChunkData rawBlocks;
+		for(unsigned int z = 0 ; z < 16 ; ++z)
+			for(unsigned int y = 0 ; y < 16 ; ++y)
+				for(unsigned int x = 0 ; x < 16 ; ++x)
+					(*blocks)[z][y][x].toRaw(&rawBlocks[z][y][x], list);
+		if(!deflate(&this->blocks, &rawBlocks))
+			throw std::runtime_error("compression failed");
+	}
 	
 	compressedSegment::compressedSegment(const struct segmentHead *head,const rawChunkData *blocks):
 	head(head) {
@@ -433,7 +442,12 @@ namespace smd2{
 			throw std::runtime_error("compression failed");
 	}
 	
-	compressedSegment::compressedSegment(const struct segment *src) {} //TODO #21
+	compressedSegment::compressedSegment(const struct segment *src, const blocktypeList* list):
+	head(src->head) {
+		rawSegment raw(src, list);
+		if(!deflate(&this->blocks, &raw.blocks))
+			throw std::runtime_error("compression failed");
+	}
 	
 	compressedSegment::compressedSegment(const struct rawSegment *src):
 	head(src->head) {

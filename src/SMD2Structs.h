@@ -80,9 +80,9 @@ namespace smd2{
 		compressedChunkData blocks;
 		compressedSegment(const struct compressedSegment*);
 		compressedSegment(const struct segmentHead*,const compressedChunkData*);
-		compressedSegment(const struct segmentHead*,const chunkData*);
+		compressedSegment(const struct segmentHead*,const chunkData*, const blocktypeList* list);
 		compressedSegment(const struct segmentHead*,const rawChunkData*);
-		compressedSegment(const struct segment*);
+		compressedSegment(const struct segment*, const blocktypeList* list);
 		compressedSegment(const struct rawSegment*);
 		compressedSegment(const rawCompressedSegment*);
 		rawCompressedSegment *toRawCompressed(rawCompressedSegment*,const bool) const;
