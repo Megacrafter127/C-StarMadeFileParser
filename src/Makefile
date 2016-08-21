@@ -1,12 +1,15 @@
 AR       := ar
 ARFLAGS  := -r -c -s
 CXX      := g++
-CXXFLAGS := -Wall -Wextra -pedantic -std=c++03 -fPIC
+CXXFLAGS := -Wall -Wextra -pedantic -std=c++11 -fPIC -g -O0
 LDFLAGS  :=
 LIBS     := -lz
-SRC      := $(wildcard ./*.cpp)
+TESTSRC  := $(wildcard ./*Test.cpp)
+SRC      := $(filter-out $(TESTSRC),$(wildcard ./*.cpp))
 OBJDIR   := ./obj
 LIBDIR   := ./lib
+BINDIR   := ./bin
+BIN      := $(BINDIR)/test
 
 obj_of_src = $(addprefix $(OBJDIR)/, $(1:%.cpp=%.o))
 
@@ -20,10 +23,10 @@ else
 	UNAME := $(shell uname -s)
 	ifeq ($(UNAME),Darwin) # OSX
 		SONAME_OPTION := -install_name
-		DYNLIB        := $(LIBDIR)/$(LIBNAME).dylib
+		DYNLIB        := $(LIBDIR)/lib$(LIBNAME).dylib
 	else ifeq ($(UNAME),Linux) # Linux
 		SONAME_OPTION := -soname
-		DYNLIB        := $(LIBDIR)/$(LIBNAME).so
+		DYNLIB        := $(LIBDIR)/lib$(LIBNAME).so
 	else # Unknown
 		$(error Makefile couldn't recognize operating system)
 	endif
@@ -31,10 +34,11 @@ endif
 
 .PHONY: all clean
 
-all: static dynamic
+all: static dynamic test
 
 dynamic: $(DYNLIB)
 static: $(STATLIB)
+test: $(BIN)
 
 $(DYNLIB): $(OBJ) | $(LIBDIR)
 	$(CXX) $(LDFLAGS) -shared -Wl,$(SONAME_OPTION),$(notdir $@) -o $@ $^ $(LIBS)
@@ -42,7 +46,10 @@ $(DYNLIB): $(OBJ) | $(LIBDIR)
 $(STATLIB): $(OBJ) | $(LIBDIR)
 	$(AR) $(ARFLAGS) $@ $?
 
-$(LIBDIR) $(OBJDIR):
+$(BIN): $(DYNLIB) | $(BINDIR)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(TESTSRC) -L$(LIBDIR) -l$(LIBNAME) -lz
+
+$(LIBDIR) $(OBJDIR) $(BINDIR):
 	mkdir -p $@
 
 define obj_rule_tpl
@@ -55,4 +62,4 @@ $(foreach source, $(SRC), \
  )
 
 clean:
-	rm -rf $(OBJDIR) $(LIBDIR)
+	rm -rf $(OBJDIR) $(LIBDIR) $(BINDIR)
