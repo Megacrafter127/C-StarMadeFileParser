@@ -26,7 +26,7 @@ int main(int argc,char* argv[]) {
 		return 0;
 	}
 	smd3::Smd3FileReader<std::ifstream> file(argv[1]);
-	smd3::Segment32 s;
+	Segment32 s;
 	if(file)
 		s = file.nextSegment();
 	std::ofstream imgtest("img.ppm",
@@ -35,7 +35,7 @@ int main(int argc,char* argv[]) {
 	if(s)
 		for(auto& plane : s) {
 			for(auto& row : plane) {
-				for(smd3::block b : row)
+				for(block b : row)
 					imgtest << f(b.id) << f(b.id) << f(b.id);
 			}
 			for(int i = 0;i<32;++i)
