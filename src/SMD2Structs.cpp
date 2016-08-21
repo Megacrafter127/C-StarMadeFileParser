@@ -6,114 +6,12 @@
  */
 
 #include "SMD2Structs.h"
+#include "io.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <arpa/inet.h>
 #include <zlib.h>
 #include <stdexcept>
-
-static bool isLittleEndian() {
-	return ntohl((uint32_t)1)!=1;
-}
-
-namespace detail {
-	
-	template<class T>
-	struct identity {
-		typedef T t;
-	};
-	
-	template<class IntT>
-	struct wrapper {};
-	
-	template<>
-	struct wrapper<uint32_t> {
-		static uint32_t ntoh(uint32_t in) {
-			return ntohl(in);
-		}
-		
-		static uint32_t hton(uint32_t in) {
-			return htonl(in);
-		}
-	};
-	
-	template<>
-	struct wrapper<int32_t> {
-		static int32_t ntoh(int32_t in) {
-			uint32_t dbuff32 =
-			wrapper<uint32_t>::ntoh(reinterpret_cast<uint32_t&>(in));
-			return reinterpret_cast<int32_t&>(dbuff32);
-		}
-		
-		static int32_t hton(int32_t in) {
-			uint32_t dbuff32 =
-			wrapper<uint32_t>::hton(reinterpret_cast<uint32_t&>(in));
-			return reinterpret_cast<int32_t&>(dbuff32);
-		}
-	};
-	
-	template<>
-	struct wrapper<uint64_t> {
-		static uint64_t ntoh(uint64_t in) {
-			if(isLittleEndian()) {
-				uint32_t *split=(uint32_t*)&in,buff;
-				buff=wrapper<uint32_t>::ntoh(split[0]);
-				split[0]=wrapper<uint32_t>::ntoh(split[1]);
-				split[1]=buff;
-			}
-			return in;
-		}
-		
-		static uint64_t hton(uint64_t in) {
-			if(isLittleEndian()) {
-				uint32_t *split=(uint32_t*)&in,buff;
-				buff=wrapper<uint32_t>::hton(split[0]);
-				split[0]=wrapper<uint32_t>::hton(split[1]);
-				split[1]=buff;
-			}
-			return in;
-		}
-	};
-	
-	template<>
-	struct wrapper<int64_t> {
-		static int64_t ntoh(int64_t in) {
-			uint64_t dbuff64 =
-				wrapper<uint64_t>::ntoh(reinterpret_cast<uint64_t&>(in));
-			return reinterpret_cast<int64_t&>(dbuff64);
-		}
-		
-		static int64_t hton(int64_t in) {
-			uint64_t dbuff64 =
-				wrapper<uint64_t>::hton(reinterpret_cast<uint64_t&>(in));
-			return reinterpret_cast<int64_t&>(dbuff64);
-		}
-	};
-}
-
-template<class IntT>
-IntT ntoh(typename detail::identity<IntT>::t in) {
-	return detail::wrapper<IntT>::ntoh(in);
-}
-
-template<class IntT>
-IntT hton(typename detail::identity<IntT>::t in) {
-	return detail::wrapper<IntT>::hton(in);
-}
-
-template<class IntT>
-IntT readFromNetBuffer(const void* src) {
-	IntT in;
-	memcpy(&in, src, sizeof(IntT));
-	return ntoh<IntT>(in);
-}
-
-template<class IntT>
-void writeToNetBuffer(void* trg, typename detail::identity<IntT>::t src) {
-	src = hton<IntT>(src);
-	memcpy(trg, &src, sizeof(IntT));
-}
 
 namespace smd2{
 	
@@ -231,7 +129,7 @@ namespace smd2{
 	segmentHead::segmentHead(const struct segmentHead *copy) {
 		memcpy(this,copy,sizeof(struct segmentHead));
 	}
-	segmentHead::segmentHead(const unsigned char unknownChar, const unsigned long long timestamp, const signed long x, const signed long y, const signed long z, const unsigned char type, const unsigned long inlen) {
+	segmentHead::segmentHead(const unsigned char unknownChar, const uint64_t timestamp, const signed long x, const signed long y, const signed long z, const unsigned char type, const unsigned long inlen) {
 		this->unknownChar=unknownChar;
 		this->timestamp=timestamp;
 		this->x=x;
@@ -299,8 +197,8 @@ namespace smd2{
 	}
 	
 	static void inplaceRawChunkToChunk(chunkData& trg,
-											  const rawChunkData& src,
-											  const blocktypeList* list) {
+									   const rawChunkData& src,
+									   const blocktypeList* list) {
 		for(unsigned int z = 0 ; z < 16 ; ++z)
 			for(unsigned int y = 0 ; y < 16 ; ++y)
 				for(unsigned int x = 0 ; x < 16 ; ++x)

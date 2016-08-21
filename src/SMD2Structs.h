@@ -44,7 +44,7 @@ namespace smd2{
 		unsigned char type;
 		unsigned long inlen;
 		segmentHead(const struct segmentHead*);
-		segmentHead(const unsigned char, const unsigned long long, const signed long, const signed long, const signed long, const unsigned char, const unsigned long);
+		segmentHead(const unsigned char, const uint64_t, const signed long, const signed long, const signed long, const unsigned char, const unsigned long);
 		segmentHead(const rawCompressedSegment*,const bool);
 		segmentHead();
 		rawCompressedSegment *toRaw(rawCompressedSegment*,const bool) const;
