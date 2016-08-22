@@ -1,11 +1,11 @@
 #ifndef SMD3FILE_H_
 #define SMD3FILE_H_
 
+#include "segment.hpp"
 #include "io.hpp"
 #include <zlib.h>
 #include <vector>
 #include <map>
-#include "segment.hpp"
 
 namespace smd3 {
 	template<class IStream>
@@ -15,6 +15,8 @@ namespace smd3 {
 		static const unsigned int HEADSIZE = SEGMENTS*2*sizeof(int16_t);
 		typedef typename IStream::pos_type pos_type;
 	public:
+		typedef Segment32 segment_t;
+		
 		Smd3FileReader(const Smd3FileReader&)=delete;
 		Smd3FileReader& operator=(const Smd3FileReader&)=delete;
 		
@@ -42,7 +44,7 @@ namespace smd3 {
 		Segment32 nextSegment() {
 			byte unknown;
 			pos_type pos = input.tellg();
-			input.read(&unknown, 1); // I'm not sure what it's used for
+			input.read(&unknown, 1); // I'm not exactly sure what it's used for
 			int64_t timestamp = readFromNetStream<int64_t>(input);
 			int32_t x = readFromNetStream<int32_t>(input);
 			int32_t y = readFromNetStream<int32_t>(input);
@@ -60,7 +62,7 @@ namespace smd3 {
 				//segBuffer.reserve(size);
 				segBuffer.resize(size);
 				switch(uncompress(reinterpret_cast<Bytef*>(segBuffer.data()), &size,
-								  reinterpret_cast<Bytef*>(buffer.data()), sz)) {
+				                  reinterpret_cast<Bytef*>(buffer.data()), sz)) {
 					case Z_OK:
 						return Segment32(x,y, z, timestamp, segBuffer);
 					case Z_MEM_ERROR:
@@ -79,6 +81,7 @@ namespace smd3 {
 		void rewind() {
 			input.seekg(HEADSIZE);
 		}
+		
 		operator bool() const {
 			return static_cast<bool>(input);
 		}

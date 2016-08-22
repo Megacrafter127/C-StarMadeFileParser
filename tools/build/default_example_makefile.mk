@@ -6,12 +6,6 @@
 #               absolute)                                                      #
 ################################################################################
 
-################################################################################
-# internal variables                                                           #
-################################################################################
-
-ROOT_PATH := ..
-
 #default target
 all:
 
@@ -23,14 +17,11 @@ include $(ROOT_PATH)/tools/build/compiler_options.mk
 include ./rules.mk
 
 ################################################################################
-# Targets                                                                #
+# Targets                                                                      #
 ################################################################################
 
-.PHONY: all dynamic static clean
-
+.PHONY: all clean
 all: $(TARGETS)
-dynamic: $(DYNLIB)
-static: $(STATLIB)
 
 clean:
 	rm -rf $(CLEAN_TARGETS)

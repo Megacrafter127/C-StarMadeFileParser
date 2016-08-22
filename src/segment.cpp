@@ -1,6 +1,7 @@
 #include "segment.hpp"
 
-block block::fromRaw(const byte* raw, const blockTypeMap& tmap) {
+block block::fromRaw(const byte* ptr, const blockTypeMap& tmap) {
+	const unsigned char* raw = reinterpret_cast<const unsigned char*>(ptr);
 	block b;
 	b.id = raw[2]+((raw[1] & 0x7) << 8);
 	auto it = tmap.find(b.id);

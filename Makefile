@@ -1,16 +1,14 @@
 ################################################################################
-# Local sample Makefile template.                                              #
-#                                                                              #
-# This file relies on the previous definition of the following variables:      #
-# - ROOT_PATH : the path to the repository's root (either relative or          #
-#               absolute)                                                      #
+# Root Makefile.                                                               #
 ################################################################################
 
 ################################################################################
-# internal variables                                                           #
+# Internal variables                                                           #
 ################################################################################
 
-ROOT_PATH := ..
+ROOT_PATH := .
+
+include $(ROOT_PATH)/tools/build/compiler_options.mk
 
 #default target
 all:
@@ -19,18 +17,28 @@ all:
 # Rules                                                                        #
 ################################################################################
 
-include $(ROOT_PATH)/tools/build/compiler_options.mk
-include ./rules.mk
+DIRECTORY := ./examples
+include ./examples/rules.mk
+EXAMPLES_TARGETS := $(TARGETS)
+
+DIRECTORY := ./src
+include ./src/rules.mk
 
 ################################################################################
-# Targets                                                                #
+# Targets                                                                      #
 ################################################################################
 
-.PHONY: all dynamic static clean
+all: lib examples
 
-all: $(TARGETS)
+lib: dynamic static
+
 dynamic: $(DYNLIB)
+
 static: $(STATLIB)
+
+examples: $(EXAMPLES_TARGETS)
+
+.PHONY: all lib dynamic static examples clean
 
 clean:
 	rm -rf $(CLEAN_TARGETS)
