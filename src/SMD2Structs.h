@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <zlib.h>
+#include <cstdint>
 
 namespace smd2{
 	enum blockType {
