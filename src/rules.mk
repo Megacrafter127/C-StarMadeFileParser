@@ -3,7 +3,7 @@
 ################################################################################
 
 ifeq ($(origin SRC_RULES),undefined) #include guard
-SRC_RULES := inc
+SRC_RULES :=
 
 ################################################################################
 # internal variables                                                           #
@@ -31,11 +31,11 @@ include $(ROOT_PATH)/tools/build/os_detection.mk
 ifeq ($(OPERATING_SYSTEM),Windows)
   $(error Windows compilation not supported yet)
 else ifeq ($(OPERATING_SYSTEM),MacOS)
-  SONAME_OPTION := -install_name
   DYNLIB        := $(LIBDIR)/lib$(LIBNAME).dylib
+  LINKER_OPTIONS := -shared -Wl,-install_name,@rpath/$(notdir $(DYNLIB))
 else ifeq ($(OPERATING_SYSTEM),Linux)
-  SONAME_OPTION := -soname
   DYNLIB        := $(LIBDIR)/lib$(LIBNAME).so
+  LINKER_OPTIONS := -shared -Wl,-soname,$(notdir $(DYNLIB))
 else
   $(error Unknown operating system)
 endif
@@ -45,8 +45,7 @@ endif
 ################################################################################
 
 $(DYNLIB): $(OBJ) | $(LIBDIR)
-	$(CXX) $(LDFLAGS) -shared -Wl,$(SONAME_OPTION),$(notdir $@) -o $@ $^ \
-	       $(LIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LINKER_OPTIONS) $(LIBS)
 
 $(STATLIB): $(OBJ) | $(LIBDIR)
 	$(AR) $(ARFLAGS) $@ $?

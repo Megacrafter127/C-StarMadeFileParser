@@ -87,7 +87,9 @@ $(call dep_of_src,$(1)): $(1) | $(DEPDIR)
 	       $(strip -MT $(call obj_of_src,$(1)))
 endef
 
--include $(call dep_of_src,$(SRC))
+ifneq ($(MAKECMDGOALS),clean)
+  -include $(call dep_of_src,$(SRC))
+endif
 
 define obj_rule_tpl
 $(call obj_of_src,$(1)): $(1) | $(OBJDIR)

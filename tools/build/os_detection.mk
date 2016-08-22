@@ -9,6 +9,9 @@
 # - UNAME                                                                      #
 ################################################################################
 
+ifeq ($(origin OS_DETECTION),undefined) #include guard
+OS_DETECTION :=
+
 ifeq ($(OS),Windows_NT)
   OPERATING_SYSTEM := Windows
 else
@@ -21,3 +24,5 @@ else
     OPERATING_SYSTEM := Unknown
   endif
 endif
+
+endif #OS_DETECTION

@@ -49,6 +49,8 @@
 # internal variables                                                           #
 ################################################################################
 
+include $(ROOT_PATH)/tools/build/os_detection.mk
+
 ifeq ($(origin DIRECTORY),undefined)
   DIRECTORY := .
 endif
@@ -85,8 +87,19 @@ $(OBJDIR) $(DEPDIR) $(BINDIR):
 	mkdir -p $@
 
 #ifneq ($(strip $(SRC)),)
+  ifeq ($(OPERATING_SYSTEM),MacOS)
+    EXTRALDFLAGS := -Wl,-rpath,@executable_path/../../lib/
+  else ifeq ($(OPERATING_SYSTEM),Linux)
+    EXTRALDFLAGS := -Wl,-rpath,'$ORIGIN/../../lib'
+  else ifeq ($(OPERATING_SYSTEM),Windows)
+    $(error Windows not supported yet)
+  else
+    $(error Unknown operating system)
+  endif
+
   $(BINDIR)/$(BASE_NAME) : $(OBJ) $(DYNLIB) | $(BINDIR)
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS) -L$(LIBDIR) -l$(LIBNAME)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(EXTRALDFLAGS) $(LIBS) -L$(LIBDIR) -l$(LIBNAME)
+
 #endif
 
 include $(ROOT_PATH)/tools/build/object_rules.mk
