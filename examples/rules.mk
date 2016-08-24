@@ -6,7 +6,7 @@ ifeq ($(origin DIRECTORY),undefined)
   DIRECTORY := .
 endif
 
-EXAMPLES := ppm
+EXAMPLES := ppm sment
 
 CURDIR := $(DIRECTORY)
 $(foreach example, $(EXAMPLES),                                                \
