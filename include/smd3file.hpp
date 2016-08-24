@@ -43,7 +43,6 @@ namespace smd3 {
 		
 		Segment32 nextSegment() {
 			byte unknown;
-			pos_type pos = input.tellg();
 			input.read(&unknown, 1); // I'm not exactly sure what it's used for
 			int64_t timestamp = readFromNetStream<int64_t>(input);
 			int32_t x = readFromNetStream<int32_t>(input);
@@ -53,13 +52,11 @@ namespace smd3 {
 			input.read(&filled, 1);
 			if(input && filled) {
 				const std::size_t sz = readFromNetStream<int32_t>(input);
-				//buffer.reserve(sz);
 				buffer.resize(sz);
 				if(!input.read(&buffer[0], sz))
 					return Segment32();
-				input.seekg(pos+(pos_type)SEGSIZE);
+				input.ignore(SEGSIZE - (sz + 26));
 				uLongf size = 32*32*32*3;
-				//segBuffer.reserve(size);
 				segBuffer.resize(size);
 				switch(uncompress(reinterpret_cast<Bytef*>(segBuffer.data()), &size,
 				                  reinterpret_cast<Bytef*>(buffer.data()), sz)) {
