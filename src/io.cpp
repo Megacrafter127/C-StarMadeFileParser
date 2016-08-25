@@ -99,12 +99,12 @@ namespace detail {
 }
 
 template<class ScalarT>
-ScalarT ntoh(typename detail::identity<ScalarT>::t in) {
+ScalarT ntoh(identity_t<ScalarT> in) {
 	return detail::wrapper<ScalarT>::ntoh(in);
 }
 
 template<class ScalarT>
-ScalarT hton(typename detail::identity<ScalarT>::t in) {
+ScalarT hton(identity_t<ScalarT> in) {
 	return detail::wrapper<ScalarT>::hton(in);
 }
 
@@ -123,9 +123,16 @@ ScalarT readFromNetStream(std::istream& i) {
 }
 
 template<class ScalarT>
-void writeToNetBuffer(void* trg, typename detail::identity<ScalarT>::t src) {
+void writeToNetBuffer(void* trg, identity_t<ScalarT> src) {
 	src = hton<ScalarT>(src);
 	memcpy(trg, &src, sizeof(ScalarT));
+}
+
+template<class ScalarT>
+void writeToNetStream(std::ostream& o, identity_t<ScalarT> src) {
+	char buf[sizeof(ScalarT)];
+	writeToNetBuffer<ScalarT>(static_cast<void*>(buf), src);
+	o.write(buf, sizeof(ScalarT));
 }
 
 
@@ -137,10 +144,10 @@ template int64_t readFromNetStream<int64_t>(std::istream&);
 template uint64_t readFromNetStream<uint64_t>(std::istream&);
 template float readFromNetStream<float>(std::istream&);
 
-template void writeToNetBuffer<int16_t>(void*, int16_t);
-template void writeToNetBuffer<uint16_t>(void*, uint16_t);
-template void writeToNetBuffer<int32_t>(void*, int32_t);
-template void writeToNetBuffer<uint32_t>(void*, uint32_t);
-template void writeToNetBuffer<int64_t>(void*, int64_t);
-template void writeToNetBuffer<uint64_t>(void*, uint64_t);
-template void writeToNetBuffer<float>(void*, float);
+template void writeToNetStream<int16_t>(std::ostream&, int16_t);
+template void writeToNetStream<uint16_t>(std::ostream&, uint16_t);
+template void writeToNetStream<int32_t>(std::ostream&, int32_t);
+template void writeToNetStream<uint32_t>(std::ostream&, uint32_t);
+template void writeToNetStream<int64_t>(std::ostream&, int64_t);
+template void writeToNetStream<uint64_t>(std::ostream&, uint64_t);
+template void writeToNetStream<float>(std::ostream&, float);
