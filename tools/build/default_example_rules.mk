@@ -74,7 +74,7 @@ DEPDIR := $(subst ./,,$(subst //,/,$(DIRECTORY)/)dep)
 OBJDIR := $(subst ./,,$(subst //,/,$(DIRECTORY)/)obj)
 BINDIR := $(subst ./,,$(subst //,/,$(DIRECTORY)/))../bin
 
-dep_of_src = $(addprefix $(DEPDIR)/, $(subst /,__,$(1:%.cpp=%.d)))
+dep_of_src = $(addprefix $(DEPDIR)/, $(subst .__,,$(subst /,__,$(1:%.cpp=%.d))))
 obj_of_src = $(addprefix $(OBJDIR)/, $(notdir $(1:%.cpp=%.o)))
 
 OBJ := $(call obj_of_src,$(SRC))
