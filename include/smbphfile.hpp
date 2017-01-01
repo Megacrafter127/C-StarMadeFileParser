@@ -1,6 +1,7 @@
 #ifndef SMBPHFILE_H_
 #define SMBPHFILE_H_
 
+#include "vector3.hpp"
 #include <iostream>
 #include <vector>
 
@@ -8,12 +9,45 @@ enum class BpType {
 	Ship = 0,
 	Shop = 1,
 	SpaceStation = 2,
-	Asteroid = 3,
-	Planet = 4
+	FloatingRockManaged = 3,
+	FloatingRock = 4,
+	Planet = 5,
+// shouldn't appear in header files, it seems to be partially supported by
+// StarMade's source
+	PlanetIco = 6
 };
 
-struct vector3f {
-	float x, y, z;
+enum class BpCategory {
+// Ship type
+	GeneralShip = 0,
+	MiningShip = 1,
+	SupportShip = 2,
+	CargoShip = 3,
+	AttackShip = 4,
+	DefenseShip = 5,
+	CarrierShip = 6,
+	ScoutShip = 7,
+	ScavengerShip = 8,
+// Station type
+	GeneralStation = 9,
+	ShipyardStation = 10,
+	OutpostStation = 11,
+	DefenseStation = 12,
+	MiningStation = 13,
+	FactoryStation = 14,
+	TradeStation = 15,
+	WarpGateStation = 16,
+	ShoppingStation = 17,
+// "FLOATINGROCK" type
+	GeneralFloatingRock = 18,
+// "FLOATINGROCKMANAGED" type
+	GeneralFloatingRockManaged = 19,
+// "PLANET" type
+	GeneralPlanet = 20,
+// "SHOP" type
+	GeneralShop = 21,
+// "PLANETICO" type
+	UnknownPlanetIco = 22
 };
 
 struct BBox {
@@ -36,6 +70,17 @@ struct Element {
 
 typedef std::vector<Element> ElementCountMap;
 
+struct ShipScore {
+	double defensive;
+	double power;
+	double mobility;
+	double danger;
+	double survivability;
+	double offensive;
+	double support;
+	double mining;
+};
+
 class BpHeader;
 
 std::istream& operator>>(std::istream&, BpHeader&);
@@ -48,10 +93,12 @@ public:
 	const BBox& getBoundingBox() const;
 	// ...
 private:
-	int32_t version;
+	//int32_t version;
 	BpType type;
+	BpCategory category;
 	BBox boundingBox;
 	ElementCountMap elements;
+	ShipScore scores;
 };
 
 #endif // SMBPHFILE_H_

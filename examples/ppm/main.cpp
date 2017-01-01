@@ -18,7 +18,7 @@ int main(int argc,char* argv[]) {
 	if(file)
 		s = file.nextSegment();
 	std::ofstream imgtest("img.ppm",
-						  std::ios::trunc | std::ios::out | std::ios::binary);
+	                      std::ios::trunc | std::ios::out | std::ios::binary);
 	imgtest << "P6\n32 1056\n255\n";
 	if(s)
 		for(auto& plane : s) {
@@ -29,6 +29,7 @@ int main(int argc,char* argv[]) {
 			for(int i = 0;i<32;++i)
 				imgtest << (char) 255 << (char) 0 << (char) 0;
 		}
+	imgtest.close();
 	return 0;
 }
 

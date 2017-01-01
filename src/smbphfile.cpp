@@ -22,48 +22,24 @@ blockId(id),
 count(count) {}
 
 static std::istream& operator>>(std::istream& i, BpType& t) {
-	uint32_t tmp;
-	tmp = readFromNetStream<uint32_t>(i);
-	switch(tmp) {
-		case 1:
-			t = BpType::Shop;
-			break;
-		case 2:
-			t = BpType::SpaceStation;
-			break;
-		case 3:
-			t = BpType::Asteroid;
-			break;
-		case 4:
-			t = BpType::Planet;
-			break;
-		case 0:
-		default:
-			t = BpType::Ship;
-	}
+	const uint32_t tmp = readFromNetStream<uint32_t>(i);
+	t = tmp > 6 ? BpType::Ship : static_cast<BpType>(tmp);
 	return i;
 }
 
 static std::ostream& operator<<(std::ostream& o, BpType t) {
-	uint32_t tmp;
-	switch(t) {
-		case BpType::Shop:
-			tmp = 1;
-			break;
-		case BpType::SpaceStation:
-			tmp = 2;
-			break;
-		case BpType::Asteroid:
-			tmp = 3;
-			break;
-		case BpType::Planet:
-			tmp = 4;
-			break;
-		default:
-		case BpType::Ship:
-			tmp = 0;
-	}
-	writeToNetStream<uint32_t>(o, tmp);
+	writeToNetStream<uint32_t>(o, static_cast<uint32_t>(t));
+	return o;
+}
+
+static std::istream& operator>>(std::istream& i, BpCategory& c) {
+	const uint32_t tmp = readFromNetStream<uint32_t>(i);
+	c = tmp > 22 ? BpCategory::GeneralShip : static_cast<BpCategory>(tmp);
+	return i;
+}
+
+static std::ostream& operator<<(std::ostream& o, BpCategory c) {
+	writeToNetStream<uint32_t>(o, static_cast<uint32_t>(c));
 	return o;
 }
 
@@ -109,14 +85,78 @@ static std::ostream& operator<<(std::ostream& o, const ElementCountMap& elements
 	return o;
 }
 
+static std::istream& operator>>(std::istream& i, ShipScore& scores) {
+	char c;
+	if(!(c = i.get()) || c == EOF)
+		return i;
+	const short s = readFromNetStream<uint16_t>(i);
+	if(s == 0 || s == 1) {
+		i.ignore(8); // offensive is read twice for some reason
+		scores.defensive = readFromNetStream<double>(i);
+		scores.power = readFromNetStream<double>(i);
+		scores.mobility = readFromNetStream<double>(i);
+		scores.danger = readFromNetStream<double>(i);
+		scores.survivability = readFromNetStream<double>(i);
+		scores.offensive = readFromNetStream<double>(i);
+		scores.support = readFromNetStream<double>(i);
+		scores.mining = s==1 ? readFromNetStream<double>(i) : -1;
+	} else scores = {-1,-1,-1,-1,-1,-1,-1,-1};
+	return i;
+}
+
+static std::ostream& operator<<(std::ostream& o, const ShipScore& scores) {
+	if(scores.offensive >= 0) {
+		o.put(1);
+		writeToNetStream<uint16_t>(o, scores.mining >= 0 ? 1 : 0);
+		writeToNetStream<double>(o, scores.offensive);
+		writeToNetStream<double>(o, scores.defensive);
+		writeToNetStream<double>(o, scores.power);
+		writeToNetStream<double>(o, scores.mobility);
+		writeToNetStream<double>(o, scores.danger);
+		writeToNetStream<double>(o, scores.survivability);
+		writeToNetStream<double>(o, scores.offensive);
+		writeToNetStream<double>(o, scores.support);
+		if(scores.mining >= 0)
+			writeToNetStream<double>(o, scores.offensive);
+	} else
+		o.put(0);
+	return o;
+}
+
+static BpCategory defaultCategory(BpType t) {
+	switch(t) {
+	case BpType::Shop:
+		return BpCategory::GeneralShop;
+	case BpType::SpaceStation:
+		return BpCategory::GeneralStation;
+	case BpType::FloatingRockManaged:
+		return BpCategory::GeneralFloatingRockManaged;
+	case BpType::FloatingRock:
+		return BpCategory::GeneralFloatingRock;
+	case BpType::Planet:
+		return BpCategory::GeneralPlanet;
+	case BpType::PlanetIco:
+		return BpCategory::UnknownPlanetIco;
+	default:
+		return BpCategory::GeneralShip;
+	}
+	return BpCategory::GeneralShip;
+}
+
 std::istream& operator>>(std::istream& i, BpHeader& header) {
-	header.version = readFromNetStream<int32_t>(i);
-	return i >> header.type >> header.boundingBox >> header.elements;
+	int32_t version = readFromNetStream<int32_t>(i);
+	i >> header.type;
+	if(version >= 3)
+		i >> header.category;
+	else
+		header.category = defaultCategory(header.type);
+	return i >> header.boundingBox >> header.elements >> header.scores;
 }
 
 std::ostream& operator<<(std::ostream& o, const BpHeader& header) {
-	writeToNetStream<int32_t>(o, header.version);
-	return o << header.type << header.boundingBox << header.elements;
+	writeToNetStream<int32_t>(o, 3);
+	return o << header.type << header.category << header.boundingBox
+	         << header.elements << header.scores;
 }
 
 const BBox& BpHeader::getBoundingBox() const {

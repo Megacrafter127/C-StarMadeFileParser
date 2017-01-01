@@ -143,6 +143,7 @@ template uint32_t readFromNetStream<uint32_t>(std::istream&);
 template int64_t readFromNetStream<int64_t>(std::istream&);
 template uint64_t readFromNetStream<uint64_t>(std::istream&);
 template float readFromNetStream<float>(std::istream&);
+template double readFromNetStream<double>(std::istream&);
 
 template void writeToNetStream<int16_t>(std::ostream&, int16_t);
 template void writeToNetStream<uint16_t>(std::ostream&, uint16_t);
@@ -151,3 +152,4 @@ template void writeToNetStream<uint32_t>(std::ostream&, uint32_t);
 template void writeToNetStream<int64_t>(std::ostream&, int64_t);
 template void writeToNetStream<uint64_t>(std::ostream&, uint64_t);
 template void writeToNetStream<float>(std::ostream&, float);
+template void writeToNetStream<double>(std::ostream&, double);
