@@ -71,6 +71,7 @@ struct Element {
 typedef std::vector<Element> ElementCountMap;
 
 struct ShipScore {
+	ShipScore();
 	double defensive;
 	double power;
 	double mobility;
@@ -91,7 +92,7 @@ class BpHeader {
 	friend std::ostream& operator<<(std::ostream&, const BpHeader&);
 public:
 	const BBox& getBoundingBox() const;
-	// ...
+	const ShipScore& getScore() const;
 private:
 	//int32_t version;
 	BpType type;

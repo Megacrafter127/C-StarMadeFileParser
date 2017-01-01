@@ -76,7 +76,8 @@ static std::istream& operator>>(std::istream& i, ElementCountMap& elements) {
 	return i;
 }
 
-static std::ostream& operator<<(std::ostream& o, const ElementCountMap& elements) {
+static std::ostream& operator<<(std::ostream& o,
+                                const ElementCountMap& elements) {
 	writeToNetStream<int32_t>(o, elements.size());
 	for(auto e : elements) {
 		writeToNetStream<int16_t>(o, e.blockId);
@@ -84,6 +85,16 @@ static std::ostream& operator<<(std::ostream& o, const ElementCountMap& elements
 	}
 	return o;
 }
+
+ShipScore::ShipScore() :
+defensive(-1),
+power(-1),
+mobility(-1),
+danger(-1),
+survivability(-1),
+offensive(-1),
+support(-1),
+mining(-1) {}
 
 static std::istream& operator>>(std::istream& i, ShipScore& scores) {
 	char c;
@@ -100,7 +111,7 @@ static std::istream& operator>>(std::istream& i, ShipScore& scores) {
 		scores.offensive = readFromNetStream<double>(i);
 		scores.support = readFromNetStream<double>(i);
 		scores.mining = s==1 ? readFromNetStream<double>(i) : -1;
-	} else scores = {-1,-1,-1,-1,-1,-1,-1,-1};
+	};
 	return i;
 }
 
@@ -161,4 +172,8 @@ std::ostream& operator<<(std::ostream& o, const BpHeader& header) {
 
 const BBox& BpHeader::getBoundingBox() const {
 	return boundingBox;
+}
+
+const ShipScore& BpHeader::getScore() const {
+	return scores;
 }
