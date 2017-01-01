@@ -128,7 +128,7 @@ static std::ostream& operator<<(std::ostream& o, const ShipScore& scores) {
 		writeToNetStream<double>(o, scores.offensive);
 		writeToNetStream<double>(o, scores.support);
 		if(scores.mining >= 0)
-			writeToNetStream<double>(o, scores.offensive);
+			writeToNetStream<double>(o, scores.mining);
 	} else
 		o.put(0);
 	return o;
